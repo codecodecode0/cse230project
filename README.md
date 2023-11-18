@@ -1,4 +1,4 @@
-# cse230project
+# networked_task_board_haskell
 Final project for the course CSE 230 Fall 2023
 ## Team members:
 1. Shril Mody

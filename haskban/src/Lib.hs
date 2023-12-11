@@ -1,6 +1,7 @@
 module Lib
     ( someFunc
     ) where
+import Server.Server ( serverMain )
 
 someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+someFunc = serverMain

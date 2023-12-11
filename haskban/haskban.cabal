@@ -26,6 +26,8 @@ source-repository head
 library
   exposed-modules:
       Lib
+      Schema
+      Server.Server
   other-modules:
       Paths_haskban
   autogen-modules:
@@ -34,8 +36,16 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , brick >=1.4
+    , bytestring >=0.11
+    , containers >=0.6
+    , http-types
+    , stm >=2.5
+    , time >=1.11
+    , wai >=3.2.3
+    , warp
   default-language: Haskell2010
 
 executable haskban-exe
@@ -48,9 +58,17 @@ executable haskban-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , brick >=1.4
+    , bytestring >=0.11
+    , containers >=0.6
     , haskban
+    , http-types
+    , stm >=2.5
+    , time >=1.11
+    , wai >=3.2.3
+    , warp
   default-language: Haskell2010
 
 test-suite haskban-test
@@ -64,7 +82,15 @@ test-suite haskban-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , brick >=1.4
+    , bytestring >=0.11
+    , containers >=0.6
     , haskban
+    , http-types
+    , stm >=2.5
+    , time >=1.11
+    , wai >=3.2.3
+    , warp
   default-language: Haskell2010

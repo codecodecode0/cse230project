@@ -21,6 +21,14 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- time >= 1.11
+- stm >= 2.5
+- warp
+- http-types
+- wai >= 3.2.3
+- containers >= 0.6
+- bytestring >= 0.11
+- aeson
 - brick >= 1.4
 
 ghc-options:

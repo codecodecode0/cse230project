@@ -22,6 +22,16 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - brick >= 1.4
+- vty >= 5.35 && < 5.39
+- microlens >= 0.4
+- containers
+- text
+- aeson
+- time
+- bytestring
+- directory
+- vector
+- text-zipper
 
 ghc-options:
 - -Wall

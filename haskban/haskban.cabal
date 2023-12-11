@@ -25,7 +25,15 @@ source-repository head
 
 library
   exposed-modules:
+      Brick.Panes
+      Defs
+      InitialData
       Lib
+      Panes.FileMgr
+      Panes.Location
+      Panes.Operations
+      Panes.Projects
+      Panes.Summary
   other-modules:
       Paths_haskban
   autogen-modules:
@@ -34,8 +42,18 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , brick >=1.4
+    , bytestring
+    , containers
+    , directory
+    , microlens >=0.4
+    , text
+    , text-zipper
+    , time
+    , vector
+    , vty >=5.35 && <5.39
   default-language: Haskell2010
 
 executable haskban-exe
@@ -48,9 +66,19 @@ executable haskban-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , brick >=1.4
+    , bytestring
+    , containers
+    , directory
     , haskban
+    , microlens >=0.4
+    , text
+    , text-zipper
+    , time
+    , vector
+    , vty >=5.35 && <5.39
   default-language: Haskell2010
 
 test-suite haskban-test
@@ -64,7 +92,17 @@ test-suite haskban-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , brick >=1.4
+    , bytestring
+    , containers
+    , directory
     , haskban
+    , microlens >=0.4
+    , text
+    , text-zipper
+    , time
+    , vector
+    , vty >=5.35 && <5.39
   default-language: Haskell2010

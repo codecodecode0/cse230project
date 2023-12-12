@@ -52,6 +52,7 @@ library
     , directory
     , lens >=5.0
     , microlens >=0.4
+    , microlens-th >=0.4
     , text
     , text-zipper
     , time
@@ -78,6 +79,7 @@ executable haskban-exe
     , haskban
     , lens >=5.0
     , microlens >=0.4
+    , microlens-th >=0.4
     , text
     , text-zipper
     , time
@@ -105,6 +107,7 @@ test-suite haskban-test
     , haskban
     , lens >=5.0
     , microlens >=0.4
+    , microlens-th >=0.4
     , text
     , text-zipper
     , time

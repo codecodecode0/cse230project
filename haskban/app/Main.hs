@@ -164,7 +164,7 @@ initialState = TaskBoard
         , done = [Task "Task 4" "Description 4"]
         }
     -- , formState = Nothing
-    , formState = Just createForm
+    , formState = Just Task{ _title = "", _description = ""}
     }
 
 
@@ -182,7 +182,7 @@ ui :: TaskBoard -> Widget ()
 -- ui s = vBox [drawBoard (board s)]
 ui s = vBox [ hBorder
             , case formState s of
-                Just f -> formDraw f
+                Just f -> formDraw (mkForm f)
                 Nothing -> drawBoard (board s)  -- Display the board or the form based on state
             ]
 

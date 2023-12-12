@@ -14,7 +14,7 @@ module UIComponents
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Core
-import           Data.Text (Text as T, pack)  -- Import Data.Text and pack function
+import           Data.Text (Text, pack)  -- Import Data.Text and pack function
 -- import Lens.Micro
 import Control.Lens hiding (element)
 import Control.Lens.TH
@@ -71,6 +71,6 @@ drawBoard board =
 --       ]
 
 
-drawForm :: Maybe (Form Task e FormName) -> [Widget FormName]
-drawForm (Just form) = formDraw form
-drawForm Nothing = emptyWidget
+-- drawForm :: Maybe (Form Task e FormName) -> [Widget FormName]
+-- drawForm (Just form) = formDraw form
+-- drawForm Nothing = emptyWidget

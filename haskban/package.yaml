@@ -24,6 +24,7 @@ dependencies:
 - brick >= 1.4
 - vty >= 5.35 && < 5.39
 - microlens >= 0.4
+- microlens-th >= 0.4
 - lens >= 5.0
 - containers
 - text

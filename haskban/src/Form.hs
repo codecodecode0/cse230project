@@ -16,8 +16,8 @@ import qualified Data.Text as T
 import Data.Time
 import Lens.Micro ((^.))
 import Lens.Micro.TH
-import qualified Graphics.Vty as V
-import Graphics.Vty.CrossPlatform (mkVty)
+-- import qualified Graphics.Vty as V
+-- import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick
 import Brick.Forms
@@ -73,8 +73,8 @@ data TaskPriority = Low
                   deriving (Eq, Show)
 
 data Task = Task{
-    _title :: T.text,
-    _description :: T.text,
+    _title :: T.Text,
+    _description :: T.Text
     -- _status :: TaskStatus,
     -- _dueDate :: UTCTime,
     -- _assignedToId :: T.text,
@@ -139,16 +139,16 @@ formHandleEvent = \ev -> do
                     -- modify $ setFieldValid (st^.age >= 18) AgeField
 
 
-createForm :: IO (Form Task e FormName)
-createForm = do
-    -- now <- getCurrentTime
-    let task = Task
-            { _title = ""
-            , _description = ""
-            -- , _status = Todo
-            -- , _dueDate = now
-            -- , _assignedToId = ""
-            -- , _priority = Low
-            }
-    f = mkForm task
-    return f
+-- createForm :: IO (Form Task e FormName)
+-- createForm = do
+--     -- now <- getCurrentTime
+--     let task = Task
+--             { _title = ""
+--             , _description = ""
+--             -- , _status = Todo
+--             -- , _dueDate = now
+--             -- , _assignedToId = ""
+--             -- , _priority = Low
+--             }
+--     f = mkForm task
+--     return f

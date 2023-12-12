@@ -148,6 +148,7 @@
 module Main where
 
 import           Brick
+import Brick.Widgets.Border
 -- import           Brick.Widgets.Panes
 import           Graphics.Vty ( defAttr )
 import           UIComponents
@@ -162,6 +163,7 @@ initialState = TaskBoard
         , done = [Task "Task 4" "Description 4"]
         }
     , formState = Nothing
+    -- , formState = Just $ FormState "" ""
     }
 
 
@@ -176,7 +178,12 @@ app = App
     }
 
 ui :: TaskBoard -> Widget ()
-ui s = vBox [drawBoard (board s)]
+-- ui s = vBox [drawBoard (board s)]
+ui s = vBox [ hBorder
+            , case formState s of
+                Just _ -> drawForm (formState s)
+                Nothing -> drawBoard (board s)  -- Display the board or the form based on state
+            ]
 
 
 -- Define custom events for the UI

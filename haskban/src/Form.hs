@@ -2,43 +2,18 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Form(
-    FormName(..),
-    TaskStatus(..),
-    TaskPriority(..),
-    Task(..),
-    mkForm,
-    formDraw,
-    -- formHandleEvent
-) where
+module Form where
 
+import Defs
 import qualified Data.Text as T
 -- import Data.Time
--- import Lens.Micro ((^.))
+import Lens.Micro ((^.))
 import Lens.Micro.TH
 -- import qualified Graphics.Vty as V
 -- import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick
 import Brick.Forms
-  ( Form
-  , newForm
-  , formState
-  , formFocus
-  , setFieldValid
-  , renderForm
-  , handleFormEvent
-  , invalidFields
-  , allFieldsValid
-  , focusedFormInputAttr
-  , invalidFormInputAttr
-  , checkboxField
-  , radioField
-  , editShowableField
-  , editTextField
-  , editPasswordField
-  , (@@=)
-  )
 import Brick.Focus
   ( focusGetCurrent
   , focusRingCursor
@@ -47,58 +22,22 @@ import Brick.Focus
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
 
---         title,
---         taskDescription = description,
---         taskOwnerId = ownerId,
---         taskStatus = status,
---         taskDueDate = dueDate,
---         taskAssignedToId = assignedToId,
---         taskPriority = priority,
-data FormName = FormTitle
-          | FormDescription
-        --   | FormStatus
-        --   | FormDueDate
-        --   | FormAssignedToId
-        --   | FormPriority
-          deriving (Eq, Ord, Show)
-
-data TaskStatus = Todo
-                | InProgress
-                | Completed
-                deriving (Eq, Show)
-
-data TaskPriority = Low
-                  | Medium
-                  | High
-                  deriving (Eq, Show)
-
-data Task = Task{
-    _title :: T.Text,
-    _description :: T.Text
-    -- _status :: TaskStatus,
-    -- _dueDate :: UTCTime,
-    -- _assignedToId :: T.text,
-    -- _priority :: TaskPriority
-    } deriving (Show)
-
-makeLenses ''Task
-
-mkForm :: Task -> Form Task e FormName
+mkForm :: TaskInitData -> Form TaskInitData e ResourceName
 mkForm =
     let label s w = padBottom (Pad 1) $
                     (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
     in newForm [ label "Title" @@= editTextField title FormTitle (Just 1)
                , label "Description" @@= editTextField description FormDescription (Just 1)
-            --    , label "Status" @@= radioField status [ (Todo, "Todo")
-            --                                           , (InProgress, "InProgress")
-            --                                           , (Completed, "Completed")
-            --                                           ]
-            --    , label "Due Date" @@= editShowableField dueDate FormDueDate
-            --    , label "Assigned To" @@= editTextField assignedToId FormAssignedToId (Just 1)
-            --    , label "Priority" @@= radioField priority [ (Low, "Low")
-            --                                               , (Medium, "Medium")
-            --                                               , (High, "High")
-            --                                               ]
+               , label "Status" @@= radioField status [ (Todo,FormStatus, "Todo")
+                                                      , (InProgress,FormStatus, "InProgress")
+                                                      , (Completed,FormStatus, "Completed")
+                                                      ]
+               , label "Due Date" @@= editShowableField dueDate FormDueDate
+               , label "Assigned To" @@= editTextField assignedToId FormAssignedToId (Just 1)
+               , label "Priority" @@= radioField priority [ (Low,FormPriority, "Low")
+                                                          , (Medium,FormPriority, "Medium")
+                                                          , (High,FormPriority, "High")
+                                                          ]
                ]
 
 -- theMap :: AttrMap
@@ -109,18 +48,18 @@ mkForm =
 --   , (focusedFormInputAttr, V.black `on` V.yellow)
 --   ]
 
-formDraw :: Form Task e FormName -> Widget FormName
-formDraw f =vBox [C.vCenter $ C.hCenter form <=> C.hCenter help]
-    where
-        form = B.border $ padTop (Pad 1) $ hLimit 50 $ renderForm f
-        help = padTop (Pad 1) $ B.borderWithLabel (str "Help") body
-        body = str $ "- Title is free-form text\n" <>
-                     "- Description is free-form text\n" <>
-                     "  Status is a radio field with 3 options\n" <>
-                     "- Due Date is a time type field\n" <>
-                     "- AssignedTo is a free-form text\n" <>
-                     "- Priority is a radio field with 3 options\n" <>
-                     "- Enter/Esc quit, mouse interacts with fields"
+-- formDraw :: 
+-- formDraw f =vBox [C.vCenter $ C.hCenter form <=> C.hCenter help]
+--     where
+--         form = B.border $ padTop (Pad 1) $ hLimit 50 $ renderForm f
+--         help = padTop (Pad 1) $ B.borderWithLabel (str "Help") body
+--         body = str $ "- Title is free-form text\n" <>
+--                      "- Description is free-form text\n" <>
+--                      "  Status is a radio field with 3 options\n" <>
+--                      "- Due Date is a time type field\n" <>
+--                      "- AssignedTo is a free-form text\n" <>
+--                      "- Priority is a radio field with 3 options\n" <>
+--                      "- Enter/Esc quit, mouse interacts with fields"
 
 -- formHandleEvent :: BrickEvent n e -> EventM n (Form s e n) ()
 -- formHandleEvent ev = do

@@ -25,16 +25,10 @@ source-repository head
 
 library
   exposed-modules:
-      Brick.Panes
       Defs
+      Draw
+      Events
       Form
-      InitialData
-      Lib
-      Panes.FileMgr
-      Panes.Location
-      Panes.Operations
-      Panes.Projects
-      Panes.Summary
       UIComponents
   other-modules:
       Paths_haskban

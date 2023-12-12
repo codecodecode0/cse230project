@@ -152,50 +152,53 @@ import Brick.Widgets.Border
 import Data.Text.Internal as T
 -- import           Brick.Widgets.Panes
 import           Graphics.Vty
-import           UIComponents
-import Form
+import Defs
+import Draw
+import Events
+-- import           UIComponents
+-- import Form
 import qualified Graphics.Vty as Vty
+import Data.Text (pack)
 
+initBoard :: Board
+initBoard = Board
+  { todo = [TaskInitData (pack "T1") (pack "D1") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskInitData (pack "T2") (pack "D2") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  , inProgress = [TaskInitData (pack "T3") (pack "D3") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  , done = [TaskInitData (pack "T4") (pack "D4") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  }
 -- Define the initial state
-initialState :: TaskBoard
-initialState = TaskBoard
-    { board = Board
-        { todo = [TaskContent "Task 1" "Description 1", TaskContent "Task 2" "Description 2"]
-        , inProgress = [TaskContent "Task 3" "Description 3"]
-        , done = [TaskContent "Task 4" "Description 4"]
-        }
-    , formState = Nothing
+initialState :: AppState
+initialState = TaskBoard initBoard
     -- , formState = Just Task{ _title = T.empty, _description = T.empty}
-    }
 
-handleEvent :: BrickEvent n e -> EventM n TaskBoard ()
-handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl])) = do
-    modify (\s -> s { formState = Just Task{ _title = T.empty, _description = T.empty}})
-handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl])) = halt
-handleEvent _ = return ()
+-- handleEvent :: BrickEvent n e -> EventM n TaskBoard ()
+-- handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl])) = do
+--     modify (\s -> s { formState = Just Task{ _title = T.empty, _description = T.empty}})
+-- handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl])) = halt
+-- handleEvent _ = return ()
 
 
 -- Define the app
-app :: App TaskBoard e FormName
+app :: App AppState e ResourceName
 app = App
-    { appDraw = \s -> [ui s]
-    , appChooseCursor = neverShowCursor
-    , appHandleEvent = handleEvent
+    { appDraw = drawApp
+    , appChooseCursor = showFirstCursor
+    , appHandleEvent = handleApp
     , appStartEvent = return ()
     , appAttrMap = const $ attrMap defAttr []
     }
 
-ui :: TaskBoard -> Widget FormName
--- ui s = vBox [drawBoard (board s)]
-ui s = vBox [ hBorder
-            , case formState s of
-                Just f -> formDraw (mkForm f)
-                Nothing -> drawBoard (board s)  -- Display the board or the form based on state
-            ]
+-- ui :: TaskBoard -> Widget FormName
+-- -- ui s = vBox [drawBoard (board s)]
+-- ui s = vBox [ hBorder
+--             , case formState s of
+--                 Just f -> formDraw (mkForm f)
+--                 Nothing -> drawBoard (board s)  -- Display the board or the form based on state
+--             ]
 
 
 -- Define custom events for the UI
-data TaskBoardEvent = AddTask | Quit
+-- data TaskBoardEvent = AddTask | Quit
 
 -- handleEvent :: TaskBoard -> BrickEvent e () -> EventM e (Next TaskBoard)
 -- handleEvent s (VtyEvent (Vty.EvKey Vty.KF1 [])) =

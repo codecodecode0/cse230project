@@ -1,219 +1,72 @@
--- {-# LANGUAGE DataKinds #-}
--- {-# LANGUAGE LambdaCase #-}
--- {-# LANGUAGE OverloadedStrings #-}
--- {-# LANGUAGE TypeApplications #-}
-
--- module Main where
-
--- import           Brick hiding ( Location )
--- import           Brick.Focus
--- import           Brick.Panes
--- import           Brick.Widgets.Border
--- import           Brick.Widgets.Border.Style
--- import           Brick.Widgets.Edit
--- import           Brick.Widgets.List
--- import           Control.Monad ( guard, when )
--- import           Control.Monad.IO.Class ( liftIO )
--- import qualified Data.List as DL
--- import           Data.Maybe ( catMaybes )
--- import           Data.Version ( showVersion )
--- import           Graphics.Vty ( defAttr, withStyle, defaultStyleMask
---                               , bold, reverseVideo, dim
---                               , black, white, yellow, red )
--- import qualified Graphics.Vty as Vty
--- import           Lens.Micro
-
--- import           Defs
--- -- import           InitialData
--- import           Panes.Location ()
--- import           Panes.Operations
--- import           Panes.Projects ()
--- import           Panes.Summary
--- import           Panes.FileMgr
--- -- import           Paths_brick_panes ( version )
-
--- import UIComponents
-
-
--- type MyWorkState = Panel WName MyWorkEvent MyWorkCore
---                    '[ SummaryPane
---                     , OperationsPane
---                     , Location
---                     , Projects
---                     , FileMgrPane
---                     ]
-
--- main :: IO ()
--- -- main = defaultMain myworkApp initialState >> return ()
--- main = defaultMain myworkApp initialState
-
-
--- -- myworkApp :: App MyWorkState MyWorkEvent WName
--- -- myworkApp = App { appDraw = drawMyWork
--- --                 , appChooseCursor = showFirstCursor
--- --                 , appHandleEvent = handleMyWorkEvent
--- --                 , appStartEvent = return ()
--- --                 , appAttrMap = const myattrs
--- --                 }
-
--- -- myattrs :: AttrMap
--- -- myattrs = attrMap defAttr
--- --           [
--- --             (editAttr, white `on` black)
--- --           , (editFocusedAttr, yellow `on` black)
-
--- --           , (listAttr, defAttr `withStyle` defaultStyleMask)
--- --           , (listSelectedAttr, defAttr `withStyle` bold)
--- --           , (listSelectedFocusedAttr, defAttr `withStyle` reverseVideo)
-
--- --           , (attrName "disabled", defAttr `withStyle` dim)
--- --           , (attrName "Selected", black `on` yellow)
--- --           , (attrName "Error", fg red)
--- --           ]
-
--- -- initialState :: MyWorkState
--- -- initialState = focusRingUpdate myWorkFocusL
--- --                $ addToPanel Never
--- --                $ addToPanel Never
--- --                $ addToPanel WhenFocused
--- --                $ addToPanel WhenFocused
--- --                $ addToPanel WhenFocusedModal
--- --                $ basePanel initMyWorkCore
-
--- -- drawMyWork :: MyWorkState -> [Widget WName]
--- -- drawMyWork mws =
--- --   let mainPanes =
--- --         [
--- --           borderWithLabel  (str $ " mywork ")
--- --           $ vBox $ catMaybes
--- --           [
--- --             panelDraw @SummaryPane mws
--- --           , Just hBorder
--- --           , Just $ hBox $ catMaybes
--- --             [ hLimitPercent 25
--- --               <$> panelDraw @Projects mws
--- --             , Just vBorder
--- --             , panelDraw @Location mws
--- --             ]
--- --           , Just hBorder
--- --           , panelDraw @OperationsPane mws
--- --           ]
--- --         ]
--- --       allPanes = catMaybes [ panelDraw @FileMgrPane mws
--- --                            ]
--- --                  <> mainPanes
--- --       disableLower = \case
--- --         (m:ls) -> m : (withDefAttr (attrName "disabled") <$> ls)
--- --         o -> o
--- --   in joinBorders . withBorderStyle unicode <$> disableLower allPanes
-
-
--- -- handleMyWorkEvent :: BrickEvent WName MyWorkEvent -> EventM WName MyWorkState ()
--- -- handleMyWorkEvent = \case
--- --     AppEvent _ -> return () -- this app does not use these
--- --     -- Application global actions
--- --     --   * CTRL-q quits
--- --     --   * CTRL-l refreshes vty
--- --     --   * ESC dismisses any modal window
--- --     VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl])  -> halt
--- --     VtyEvent (Vty.EvKey (Vty.KChar 'l') [Vty.MCtrl])  -> do
--- --       vty <- getVtyHandle
--- --       liftIO $ Vty.refresh vty
--- --     VtyEvent (Vty.EvKey (Vty.KFun 1) []) -> do
--- --       fmgr <- liftIO initFileMgr
--- --       modify ((focusRingUpdate myWorkFocusL) . (onPane @FileMgrPane .~ fmgr))
--- --     -- Otherwise, allow the Panes in the Panel to handle the event
--- --     ev -> do proj0 <- gets selectedProject
--- --              s <- get
--- --              (_,s') <- handleFocusAndPanelEvents myWorkFocusL s ev
--- --              put s'
--- --              (new,prjs) <- gets getProjects
--- --              let mprj st = do pnm <- selectedProject st
--- --                               guard (Just pnm /= proj0)
--- --                               DL.find ((== pnm) . name) (projects prjs)
--- --              when new $
--- --                modify $ \st -> st
--- --                                & focusRingUpdate myWorkFocusL
--- --                                & onPane @Projects %~ updatePane prjs
--- --                                & onPane @FileMgrPane %~ updatePane False
--- --              modify $ \st ->
--- --                         case mprj st of
--- --                           Just p -> st & onPane @Location %~ updatePane p
--- --                           _ -> st
--- --              modify $ focusRingUpdate myWorkFocusL
-
--- -- myWorkFocusL :: Lens' MyWorkState (FocusRing WName)
--- -- myWorkFocusL = onBaseState . coreWorkFocusL
-
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import           Brick
-import Brick.Widgets.Border
-import Data.Text.Internal as T
--- import           Brick.Widgets.Panes
-import           Graphics.Vty
-import           UIComponents
+import Brick
+import Brick.Forms
+import Brick.Focus
+import Graphics.Vty as Vty
+import Lens.Micro
+import Lens.Micro.TH
+import Lens.Micro.Mtl
+import UIComponents
 import Form
-import qualified Graphics.Vty as Vty
 
--- Define the initial state
+data TaskBoard = TaskBoard {
+    _tasks :: [Task],
+    _appState :: Maybe (Form Task () FormName)  -- Using () for the type variable 'e'
+}
+
+makeLenses ''TaskBoard
+
 initialState :: TaskBoard
-initialState = TaskBoard
-    { board = Board
-        { todo = [TaskContent "Task 1" "Description 1", TaskContent "Task 2" "Description 2"]
-        , inProgress = [TaskContent "Task 3" "Description 3"]
-        , done = [TaskContent "Task 4" "Description 4"]
-        }
-    , formState = Nothing
-    -- , formState = Just Task{ _title = T.empty, _description = T.empty}
-    }
+initialState = TaskBoard [Task "title1" "desc1"] Nothing
 
 handleEvent :: BrickEvent n e -> EventM n TaskBoard ()
-handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl])) = do
-    modify (\s -> s { formState = Just Task{ _title = T.empty, _description = T.empty}})
-handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl])) = halt
-handleEvent _ = return ()
+handleEvent event = case event of
+    VtyEvent (EvKey (KChar 'q') [MCtrl]) -> halt
 
+    VtyEvent (EvKey (KChar 'n') [MCtrl]) -> do
+        let newTaskForm = mkForm $ Task "newtask" "newdesc"
+        modify $ appState ?~ newTaskForm
 
--- Define the app
-app :: App TaskBoard e FormName
+    VtyEvent (EvKey (KChar 's') [MCtrl]) -> do
+        maybeForm <- gets _appState
+        case maybeForm of
+            Just form -> if allFieldsValid form
+                         then do
+                             let task = formState form
+                             modify $ tasks %~ (task :)
+                             modify $ appState .~ Nothing
+                         else modify $ appState ?~ form
+            Nothing -> return ()
+
+    VtyEvent ev -> do
+        -- Correctly handle the form event
+        foc <- gets formFocus
+        maybeForm <- gets _appState
+        case maybeForm of
+            Just f -> do
+                newForm <- handleFormEvent ev
+                modify $ \s -> s {_appState = Just newForm}
+            Nothing -> return ()
+
+    _ -> return ()
+
+drawUI :: TaskBoard -> [Widget FormName]
+drawUI tb = case tb^.appState of
+    Just form -> [renderForm form]
+    Nothing   -> [drawBoard $ tb^.tasks]
+
+app :: App TaskBoard (Form Task e FormName) e FormName
 app = App
-    { appDraw = \s -> [ui s]
-    , appChooseCursor = neverShowCursor
+    { appDraw = drawUI
     , appHandleEvent = handleEvent
+    , appChooseCursor = focusRingCursor formFocus
+    -- , appChooseCursor = showFirstCursor
     , appStartEvent = return ()
-    , appAttrMap = const $ attrMap defAttr []
+    , appAttrMap = const $ attrMap Vty.defAttr []
     }
 
-ui :: TaskBoard -> Widget FormName
--- ui s = vBox [drawBoard (board s)]
-ui s = vBox [ hBorder
-            , case formState s of
-                Just f -> formDraw (mkForm f)
-                Nothing -> drawBoard (board s)  -- Display the board or the form based on state
-            ]
-
-
--- Define custom events for the UI
-data TaskBoardEvent = AddTask | Quit
-
--- handleEvent :: TaskBoard -> BrickEvent e () -> EventM e (Next TaskBoard)
--- handleEvent s (VtyEvent (Vty.EvKey Vty.KF1 [])) =
---     continue $ s { formState = Just $ FormState "" "" }  -- Activate the form state on F1 key press
--- handleEvent s (VtyEvent (Vty.EvKey Vty.KEnter [])) =
---     case formState s of
---         Just form ->
---             let newTask = Task (name form) (description form)
---             in continue $ s { board = (board s) { todo = newTask : todo (board s) }, formState = Nothing }
---         Nothing -> continue s
--- handleEvent s _ = continue s
-
--- handleEvent :: BrickEvent n TaskBoardEvent -> EventM n TaskBoard ()
--- handleEvent =  \case
---   TaskBoardEvent _ -> return ()
---   VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl])  -> halt
-   
-
--- Main function to run the app
 main :: IO ()
 main = defaultMain app initialState >> return ()

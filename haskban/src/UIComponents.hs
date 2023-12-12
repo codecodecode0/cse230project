@@ -1,81 +1,17 @@
-{-# LANGUAGE TemplateHaskell #-}
-
-module UIComponents
-    ( Task(..)
-    , Board(..)
-    , TaskBoard(..)
-    , TaskContent(..)
-    -- , FormState(..)
-    , drawTask
-    , drawColumn
-    , drawBoard
-    -- , drawForm
-    ) where
+{-# LANGUAGE OverloadedStrings #-}
+module UIComponents where
 
 import Brick
 import Brick.Widgets.Border
-import Brick.Widgets.Core
-import           Data.Text (Text, pack)  -- Import Data.Text and pack function
--- import Lens.Micro
-import Control.Lens hiding (element)
-import Control.Lens.TH
 import Form
--- import           Control.Lens
+import Lens.Micro ((^.))
 
--- Define Task and Board types
--- data Task = Task
---     { taskName :: String
---     , taskDescription :: String
---     }
-data TaskContent = TaskContent
-    { taskName :: String
-    , taskDescription :: String
-    } deriving (Show, Eq)
+drawTask :: Task -> Widget n
+drawTask task = vBox
+    [ hBox [str "Title: ", txt $ task^.title]
+    , hBox [str "Description: ", txtWrap $ task^.description]
+    , hBorder
+    ]
 
-data Board = Board
-    { todo :: [TaskContent]
-    , inProgress :: [TaskContent]
-    , done :: [TaskContent]
-    }
-
--- Define TaskBoard type
-data TaskBoard = TaskBoard
-    { board :: Board
-    , formState :: Maybe Task
-    }
-
-
--- data Task = Task
---     { _title :: T.text
---     , _description :: T.text
---     }
-
--- makeLenses ''Task
--- Rendering functions
-drawTask :: TaskContent -> Widget FormName
-drawTask task =
-    vBox [ strWrap (taskName task)
-         , strWrap (taskDescription task)
-         , hBorder
-         ]
-
-drawColumn :: [TaskContent] -> Widget FormName
-drawColumn tasks =
-    vBox $ map drawTask tasks
-
-drawBoard :: Board -> Widget FormName
-drawBoard board =
-    hBox [ borderWithLabel (str "Todo") (drawColumn (todo board))
-         , borderWithLabel (str "In Progress") (drawColumn (inProgress board))
-         , borderWithLabel (str "Done") (drawColumn (done board))
-         ]
-
--- taskForm = newForm 
---       [ editTextField form^.name "Name" 
---       , editTextField taskDescription taskDescription Lens.string (Just 3)
---       ]
-
-
--- drawForm :: Maybe (Form Task e FormName) -> [Widget FormName]
--- drawForm (Just form) = formDraw form
--- drawForm Nothing = emptyWidget
+drawBoard :: [Task] -> Widget n
+drawBoard tasks = vBox $ map drawTask tasks

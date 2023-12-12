@@ -153,6 +153,7 @@ import Brick.Widgets.Border
 import           Graphics.Vty ( defAttr )
 import           UIComponents
 import UIComponents (TaskBoard)
+import Form
 
 -- Define the initial state
 initialState :: TaskBoard
@@ -162,8 +163,8 @@ initialState = TaskBoard
         , inProgress = [Task "Task 3" "Description 3"]
         , done = [Task "Task 4" "Description 4"]
         }
-    , formState = Nothing
-    -- , formState = Just $ FormState "" ""
+    -- , formState = Nothing
+    , formState = Just createForm
     }
 
 
@@ -181,7 +182,7 @@ ui :: TaskBoard -> Widget ()
 -- ui s = vBox [drawBoard (board s)]
 ui s = vBox [ hBorder
             , case formState s of
-                Just _ -> drawForm (formState s)
+                Just f -> formDraw f
                 Nothing -> drawBoard (board s)  -- Display the board or the form based on state
             ]
 

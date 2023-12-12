@@ -27,6 +27,7 @@ library
   exposed-modules:
       Brick.Panes
       Defs
+      Form
       InitialData
       Lib
       Panes.FileMgr
@@ -49,6 +50,7 @@ library
     , bytestring
     , containers
     , directory
+    , lens >=5.0
     , microlens >=0.4
     , text
     , text-zipper
@@ -74,6 +76,7 @@ executable haskban-exe
     , containers
     , directory
     , haskban
+    , lens >=5.0
     , microlens >=0.4
     , text
     , text-zipper
@@ -100,6 +103,7 @@ test-suite haskban-test
     , containers
     , directory
     , haskban
+    , lens >=5.0
     , microlens >=0.4
     , text
     , text-zipper

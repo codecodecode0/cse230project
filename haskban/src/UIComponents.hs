@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module UIComponents
     ( Task(..)
     , Board(..)
@@ -12,14 +14,18 @@ module UIComponents
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Core
-import           Data.Text (Text, pack)  -- Import Data.Text and pack function
-
+import           Data.Text (Text as T, pack)  -- Import Data.Text and pack function
+-- import Lens.Micro
+import Control.Lens hiding (element)
+import Control.Lens.TH
+import Form
+-- import           Control.Lens
 
 -- Define Task and Board types
-data Task = Task
-    { taskName :: String
-    , taskDescription :: String
-    }
+-- data Task = Task
+--     { taskName :: String
+--     , taskDescription :: String
+--     }
 
 data Board = Board
     { todo :: [Task]
@@ -30,15 +36,16 @@ data Board = Board
 -- Define TaskBoard type
 data TaskBoard = TaskBoard
     { board :: Board
-    , formState :: Maybe FormState
+    , formState :: Maybe Task
     }
 
--- Form state for creating a new task
-data FormState = FormState
-    { name :: String
-    , description :: String
-    }
 
+-- data Task = Task
+--     { _title :: T.text
+--     , _description :: T.text
+--     }
+
+-- makeLenses ''Task
 -- Rendering functions
 drawTask :: Task -> Widget n
 drawTask task =
@@ -58,10 +65,12 @@ drawBoard board =
          , borderWithLabel (str "Done") (drawColumn (done board))
          ]
 
-drawForm :: Maybe FormState -> Widget n
-drawForm (Just form) =
-    border $ vBox [ str "Create New Task"
-                  , str "Name: " <+> txt (pack $ name form)  -- Convert String to Text using pack
-                  , str "Description: " <+> txt (pack $ description form)  -- Convert String to Text using pack
-                  ]
+-- taskForm = newForm 
+--       [ editTextField form^.name "Name" 
+--       , editTextField taskDescription taskDescription Lens.string (Just 3)
+--       ]
+
+
+drawForm :: Maybe (Form Task e FormName) -> [Widget FormName]
+drawForm (Just form) = formDraw form
 drawForm Nothing = emptyWidget

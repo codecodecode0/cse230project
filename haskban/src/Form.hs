@@ -9,12 +9,12 @@ module Form(
     Task(..),
     mkForm,
     formDraw,
-    formHandleEvent
+    -- formHandleEvent
 ) where
 
 import qualified Data.Text as T
-import Data.Time
-import Lens.Micro ((^.))
+-- import Data.Time
+-- import Lens.Micro ((^.))
 import Lens.Micro.TH
 -- import qualified Graphics.Vty as V
 -- import Graphics.Vty.CrossPlatform (mkVty)
@@ -43,7 +43,7 @@ import Brick.Focus
   ( focusGetCurrent
   , focusRingCursor
   )
-import qualified Brick.Widgets.Edit as E
+-- import qualified Brick.Widgets.Edit as E
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
 
@@ -84,7 +84,7 @@ data Task = Task{
 makeLenses ''Task
 
 mkForm :: Task -> Form Task e FormName
-mkForm = 
+mkForm =
     let label s w = padBottom (Pad 1) $
                     (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
     in newForm [ label "Title" @@= editTextField title FormTitle (Just 1)
@@ -109,8 +109,8 @@ mkForm =
 --   , (focusedFormInputAttr, V.black `on` V.yellow)
 --   ]
 
-formDraw :: Form Task e FormName -> [Widget FormName]
-formDraw f =[C.vCenter $ C.hCenter form <=> C.hCenter help]
+formDraw :: Form Task e FormName -> Widget FormName
+formDraw f =vBox [C.vCenter $ C.hCenter form <=> C.hCenter help]
     where
         form = B.border $ padTop (Pad 1) $ hLimit 50 $ renderForm f
         help = padTop (Pad 1) $ B.borderWithLabel (str "Help") body
@@ -122,16 +122,17 @@ formDraw f =[C.vCenter $ C.hCenter form <=> C.hCenter help]
                      "- Priority is a radio field with 3 options\n" <>
                      "- Enter/Esc quit, mouse interacts with fields"
 
-formHandleEvent = \ev -> do
-            f <- gets formFocus
-            case ev of
-                VtyEvent (V.EvResize {}) -> return ()
-                VtyEvent (V.EvKey V.KEsc []) -> halt
-                -- Enter quits only when we aren't in the multi-line editor.
-                VtyEvent (V.EvKey V.KEnter [])
-                    | focusGetCurrent f /= Just FormAssignedToId -> halt
-                _ -> do
-                    handleFormEvent ev
+-- formHandleEvent :: BrickEvent n e -> EventM n (Form s e n) ()
+-- formHandleEvent ev = do
+--             f <- gets formFocus
+--             case ev of
+--                 VtyEvent (V.EvResize {}) -> return ()
+--                 VtyEvent (V.EvKey V.KEsc []) -> halt
+--                 -- Enter quits only when we aren't in the multi-line editor.
+--                 VtyEvent (V.EvKey V.KEnter [])
+--                     | focusGetCurrent f /= Just FormDescription-> halt
+--                 _ -> do
+--                     handleFormEvent ev
 
                     -- Example of external validation:
                     -- Require age field to contain a value that is at least 18.

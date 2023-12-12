@@ -149,36 +149,43 @@ module Main where
 
 import           Brick
 import Brick.Widgets.Border
+import Data.Text.Internal as T
 -- import           Brick.Widgets.Panes
-import           Graphics.Vty ( defAttr )
+import           Graphics.Vty
 import           UIComponents
-import UIComponents (TaskBoard)
 import Form
+import qualified Graphics.Vty as Vty
 
 -- Define the initial state
 initialState :: TaskBoard
 initialState = TaskBoard
     { board = Board
-        { todo = [Task "Task 1" "Description 1", Task "Task 2" "Description 2"]
-        , inProgress = [Task "Task 3" "Description 3"]
-        , done = [Task "Task 4" "Description 4"]
+        { todo = [TaskContent "Task 1" "Description 1", TaskContent "Task 2" "Description 2"]
+        , inProgress = [TaskContent "Task 3" "Description 3"]
+        , done = [TaskContent "Task 4" "Description 4"]
         }
-    -- , formState = Nothing
-    , formState = Just Task{ _title = "", _description = ""}
+    , formState = Nothing
+    -- , formState = Just Task{ _title = T.empty, _description = T.empty}
     }
+
+handleEvent :: BrickEvent n e -> EventM n TaskBoard ()
+handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl])) = do
+    modify (\s -> s { formState = Just Task{ _title = T.empty, _description = T.empty}})
+handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl])) = halt
+handleEvent _ = return ()
 
 
 -- Define the app
-app :: App TaskBoard e ()
+app :: App TaskBoard e FormName
 app = App
     { appDraw = \s -> [ui s]
     , appChooseCursor = neverShowCursor
-    -- , appHandleEvent = handleEvent
+    , appHandleEvent = handleEvent
     , appStartEvent = return ()
     , appAttrMap = const $ attrMap defAttr []
     }
 
-ui :: TaskBoard -> Widget ()
+ui :: TaskBoard -> Widget FormName
 -- ui s = vBox [drawBoard (board s)]
 ui s = vBox [ hBorder
             , case formState s of

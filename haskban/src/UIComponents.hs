@@ -4,11 +4,12 @@ module UIComponents
     ( Task(..)
     , Board(..)
     , TaskBoard(..)
-    , FormState(..)
+    , TaskContent(..)
+    -- , FormState(..)
     , drawTask
     , drawColumn
     , drawBoard
-    , drawForm
+    -- , drawForm
     ) where
 
 import Brick
@@ -26,11 +27,15 @@ import Form
 --     { taskName :: String
 --     , taskDescription :: String
 --     }
+data TaskContent = TaskContent
+    { taskName :: String
+    , taskDescription :: String
+    } deriving (Show, Eq)
 
 data Board = Board
-    { todo :: [Task]
-    , inProgress :: [Task]
-    , done :: [Task]
+    { todo :: [TaskContent]
+    , inProgress :: [TaskContent]
+    , done :: [TaskContent]
     }
 
 -- Define TaskBoard type
@@ -47,18 +52,18 @@ data TaskBoard = TaskBoard
 
 -- makeLenses ''Task
 -- Rendering functions
-drawTask :: Task -> Widget n
+drawTask :: TaskContent -> Widget FormName
 drawTask task =
     vBox [ strWrap (taskName task)
          , strWrap (taskDescription task)
          , hBorder
          ]
 
-drawColumn :: [Task] -> Widget n
+drawColumn :: [TaskContent] -> Widget FormName
 drawColumn tasks =
     vBox $ map drawTask tasks
 
-drawBoard :: Board -> Widget n
+drawBoard :: Board -> Widget FormName
 drawBoard board =
     hBox [ borderWithLabel (str "Todo") (drawColumn (todo board))
          , borderWithLabel (str "In Progress") (drawColumn (inProgress board))

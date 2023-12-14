@@ -32,22 +32,31 @@ data TaskPriority = Low
                   | High
                   deriving (Eq, Show)
 
-data TaskInitData = TaskInitData {
-    _title :: T.Text,
-    _description :: T.Text,
-    _status :: TaskStatus,
-    _dueDate :: UTCTime,
-    _assignedToId :: T.Text,
-    _priority :: TaskPriority
+data TaskData = TaskData {
+  _title :: T.Text,
+  _description :: T.Text,
+  _status :: TaskStatus,
+  _dueDate :: UTCTime,
+  _assignedToId :: T.Text,
+  _priority :: TaskPriority
 }
-makeLenses ''TaskInitData
+makeLenses ''TaskData
 
 data Board = Board
-  { todo :: [TaskInitData]
-  , inProgress :: [TaskInitData]
-  , done :: [TaskInitData]
+  { todo :: [TaskData]
+  , inProgress :: [TaskData]
+  , done :: [TaskData]
   }
+
+data TaskFormData = TaskFormData {
+  _name :: T.Text,
+  _desc :: T.Text,
+  _taskPriority :: TaskPriority,
+  _cursor :: Int,
+  _currentBoard :: Board
+}
+makeLenses ''TaskFormData
 
 data AppState 
   = TaskBoard Board
-  | AddTaskForm (TaskForm TaskInitData ())
+  | AddTaskForm (TaskForm TaskFormData ())

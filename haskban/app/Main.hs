@@ -14,9 +14,9 @@ import Data.Text (pack)
 
 initBoard :: Board
 initBoard = Board
-  { todo = [TaskInitData (pack "T1") (pack "D1") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskInitData (pack "T2") (pack "D2") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , inProgress = [TaskInitData (pack "T3") (pack "D3") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , done = [TaskInitData (pack "T4") (pack "D4") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  { todo = [TaskData (pack "T1") (pack "D1") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskData (pack "T2") (pack "D2") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  , inProgress = [TaskData (pack "T3") (pack "D3") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  , done = [TaskData (pack "T4") (pack "D4") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
   }
 -- Define the initial state
 initialState :: AppState
@@ -27,7 +27,7 @@ initialState = TaskBoard initBoard
 app :: App AppState e ResourceName
 app = App
     { appDraw = drawApp
-    , appChooseCursor = setCursor
+    , appChooseCursor = neverShowCursor
     , appHandleEvent = handleApp
     , appStartEvent = return ()
     , appAttrMap = const $ attrMap defAttr []

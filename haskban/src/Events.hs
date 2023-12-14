@@ -14,117 +14,54 @@ import Brick
 import Brick (modify)
 import Brick.Forms (Form(formState))
 
-sampleBoard :: Board
-sampleBoard = Board
-  { todo = [TaskInitData (pack "T1") (pack "D1") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskInitData (pack "T2") (pack "D2") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , inProgress = [TaskInitData (pack "T3") (pack "D3") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , done = [TaskInitData (pack "T4") (pack "D4") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  }
--- Define the initial state
-sampleState :: AppState
-sampleState = TaskBoard sampleBoard
-
 handleApp :: BrickEvent ResourceName e -> EventM ResourceName AppState ()
 handleApp = \case
     AppEvent _ -> return ()
-
     VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl]) -> halt
-    VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) -> 
-        modify(\s -> AddTaskForm (mkForm $ TaskInitData (pack "New Task") (pack "New desc") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low))
-    
-    VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
-        modify(const sampleState )
-
     ev -> do
         state <- get
         case state of
-            TaskBoard b -> modify id
-            AddTaskForm form -> do
+            TaskBoard board -> handleBoard board ev
+            AddTaskForm form -> handleForm form ev
 
-                case ev of
-                    VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) ->
-                        modify(\s -> TaskBoard (sampleBoard { todo = formState form : todo sampleBoard }))
+handleBoard :: Board -> BrickEvent ResourceName e -> EventM ResourceName AppState ()
+handleBoard board ev = case ev of
+    VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) -> 
+        modify(\s -> AddTaskForm (mkForm $ TaskFormData (pack "") (pack "") Low 0 board))
 
-                    _ -> do
-                        -- handleForm ev form
-                        -- newState <- gets formState
-                        modify $ \s -> AddTaskForm (mkForm $ TaskInitData (pack "New Task Modified") (pack "New desc mod") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low)
-
-                -- f <- gets formFocus
-                
     _ -> return ()
 
+handleForm :: TaskForm TaskFormData () -> BrickEvent ResourceName e -> EventM ResourceName AppState ()
+handleForm form ev = do
+    let currentForm = formState form
+    let currTitle = _name currentForm
+    let currDesc = _desc currentForm
+    let currPriority = _taskPriority currentForm
+    let currCursor = _cursor currentForm
+    let currBoard = _currentBoard currentForm
+    case ev of
+        VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
+            modify(\s -> TaskBoard currBoard)
 
--- handleForm :: BrickEvent ResourceName e -> EventM ResourceName (Form TaskInitData e ResourceName) ()
--- handleForm ev = do
---                         (handleFormEvent :: (Eq n) => BrickEvent n e -> EventM n (Form TaskInitData e n) ()) ev
+        VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> do
+            let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") (pack "") currPriority
+            modify(\s -> TaskBoard (currBoard { todo = newTask : todo currBoard }))
 
-    -- ev -> modify (\s -> case s of
-    --     TaskBoard b -> s
-    --     AddTaskForm form -> 
-    --         handleFormEvent ev
-    --         let st = gets formState
-    --         return st
+        VtyEvent (Vty.EvKey Vty.KEnter []) -> do
+            let nextCursor = 1 - currCursor
+            modify $ \s -> AddTaskForm (mkForm $ TaskFormData currTitle currDesc Low nextCursor currBoard)
+
+        VtyEvent (Vty.EvKey (Vty.KChar '\t') []) -> do
+            let nextCursor = 1 - currCursor
+            modify $ \s -> AddTaskForm (mkForm $ TaskFormData currTitle currDesc Low nextCursor currBoard)
             
-            -- f <- gets formFocus
-            -- case ev of
-            --     VtyEvent (V.EvResize {}) -> return ()
-            --     VtyEvent (V.EvKey V.KEsc []) -> halt
-            --     -- Enter quits only when we aren't in the multi-line editor.
-            --     VtyEvent (V.EvKey V.KEnter [])
-            --         | focusGetCurrent f /= Just AddressField -> halt
-            --     _ -> do
-            --         handleFormEvent ev
+        VtyEvent (Vty.EvKey (Vty.KChar c) []) -> do
+            case currCursor of
+                0 -> do
+                    let updatedTitle = currTitle  <> pack [c]
+                    modify $ \s -> AddTaskForm (mkForm $ TaskFormData updatedTitle currDesc Low currCursor currBoard)
+                1 -> do
+                    let updatedDesc = currDesc <> pack [c]
+                    modify $ \s -> AddTaskForm (mkForm $ TaskFormData currTitle updatedDesc Low currCursor currBoard)
 
-            --         -- Example of external validation:
-            --         -- Require age field to contain a value that is at least 18.
-            --         st <- gets formState
-            --         modify $ setFieldValid (st^.age >= 18) AgeField
-        -- )
-        
-    
-
-        -- modify(\s -> case s of
-        --         AddTaskForm form -> AddTaskForm (handleFormEvent e form)
-        --         _ -> return s)
-        
-        -- modify(\s -> do 
-        --     case s of
-        --         AddTaskForm form -> handleFormEvent e form
-        --         _ -> return s)
-
-    -- VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> do
-    --     case getFormState of
-    --         Just form -> do
-    --             let taskData = formState form
-    --             -- Append the new task to the "Todo" list in the task board
-    --             modify (\s -> case s of
-    --                 TaskBoard board -> TaskBoard (board { todo = taskData : todo board })
-    --                 _ -> s
-    --                 )
-    --         Nothing -> return ()
-        -- modify(\s -> s)
-    
-    -- -- Press Fn 1 to open form
-    -- VtyEvent (Vty.EvKey (Vty.KFun 1) []) ->
-    --     AddTaskForm (mkForm $ TaskInitData (pack "") (pack "") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low)
-        -- modify(\s -> s { AddTaskForm mkForm TaskInitData {(pack "") (pack "") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low}})
---     TaskBoard board -> handleBoard board
---     AddTaskForm form -> handleForm form
-
--- handleBoard :: Board -> BrickEvent ResourceName e -> EventM ResourceName () ()
--- handleBoard board ev = case ev of
---     VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) -> 
---         modify(\s -> s)
---         -- modify(\s -> s { AddTaskForm mkForm TaskInitData {(pack "") (pack "") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low}})
-        
---     VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl]) -> halt
---     _ -> return ()
-
--- handleForm :: TaskForm TaskInitData -> BrickEvent ResourceName e -> EventM ResourceName () ()
--- handleForm form ev = case ev of
---     VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl]) -> halt
-    -- _ -> return ()
-    -- _ -> do
-    --     nextForm <- handleFormEvent ev form
-    --     return (AddTaskForm nextForm)
+        _ -> return ()

@@ -12,7 +12,6 @@ import Brick.Forms
 import Brick.Focus
 import Lens.Micro ((^.))
 import Data.Text (Text)
--- import qualified Data.Text as T
 
 
 drawApp :: AppState -> [Widget ResourceName]
@@ -21,38 +20,37 @@ drawApp g = case g of
     AddTaskForm form -> drawForm form
 
 drawBoard :: Board -> [Widget ResourceName]
-drawBoard board = [hBox [drawColumn "To Do" (todo board), 
+drawBoard board = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
+    where
+        bd = hBox [drawColumn "To Do" (todo board), 
                    drawColumn "In Progress" (inProgress board), 
-                   drawColumn "Done" (done board)]]
+                   drawColumn "Done" (done board)]
+        help = padTop (Pad 1) $ borderWithLabel (str "Help") body
+        body = str $ "Press Ctrl + N to create a new task\n" <>
+                     "Press Ctrl + I to open the In Progress tasks\n" <>
+                     "Press Ctrl + T to open the To Do tasks\n" <>
+                     "Press Ctrl + Q to quit the app"
             
-drawColumn :: String -> [TaskInitData] -> Widget ResourceName
+drawColumn :: String -> [TaskData] -> Widget ResourceName
 drawColumn colTitle tasks =
     borderWithLabel (str colTitle) (vBox $ map drawTask tasks)
 
-drawTask :: TaskInitData -> Widget ResourceName
+drawTask :: TaskData -> Widget ResourceName
 drawTask task =
     vBox [ txtWrap (task ^. title)
          , txtWrap (task ^. description)
          , hBorder
          ]
 
-drawForm :: TaskForm TaskInitData e -> [Widget ResourceName]
-drawForm f =  [C.vCenter $ C.hCenter form]
+drawForm :: TaskForm TaskFormData e -> [Widget ResourceName]
+drawForm f =  [C.vCenter $ C.hCenter form <=> C.hCenter help]
     where
         form = addBorder "" $ padTop (Pad 1) $ hLimit 50 $ renderForm f
-        -- help = padTop (Pad 1) $ B.borderWithLabel (str "Help") body
-        -- body = str $ "- Title is free-form text\n" <>
-        --              "- Description is free-form text\n" <>
-        --              "  Status is a radio field with 3 options\n" <>
-        --              "- Due Date is a time type field\n" <>
-        --              "- AssignedTo is a free-form text\n" <>
-        --              "- Priority is a radio field with 3 options\n" <>
-        --              "- Enter/Esc quit, mouse interacts with fields"
+        help = padTop (Pad 1) $ borderWithLabel (str "Help") body
+        body = str $ "Press Enter or Tab to move to the next field\n" <>
+                     "Press Ctrl + S to save the task\n" <>
+                     "Press Ctrl + B to discard changes and return to tasks board\n" <>
+                     "Press Ctrl + Q to quit the app"
     
 addBorder :: Text -> Widget ResourceName -> Widget ResourceName
 addBorder t = withBorderStyle BS.unicodeRounded . borderWithLabel (txt t)
-
-setCursor :: AppState -> [CursorLocation ResourceName] -> Maybe (CursorLocation ResourceName)
-setCursor s = case s of
-    TaskBoard board -> showFirstCursor board
-    AddTaskForm form -> focusRingCursor formFocus form

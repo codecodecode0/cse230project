@@ -20,13 +20,13 @@ drawApp g = case g of
     AddTaskForm form -> drawForm form
 
 drawBoard :: Board -> [Widget ResourceName]
-drawBoard board = [drawColumn "To Do" (todo board), 
+drawBoard board = [hBox [drawColumn "To Do" (todo board), 
                    drawColumn "In Progress" (inProgress board), 
-                   drawColumn "Done" (done board)]
+                   drawColumn "Done" (done board)]]
             
 drawColumn :: String -> [TaskInitData] -> Widget ResourceName
 drawColumn colTitle tasks =
-    vBox $ (strWrap colTitle) : (map drawTask tasks)
+    borderWithLabel (str colTitle) (vBox $ map drawTask tasks)
 
 drawTask :: TaskInitData -> Widget ResourceName
 drawTask task =

@@ -4,12 +4,12 @@ import           Brick
 import Brick.Widgets.Border
 import Data.Text.Internal as T
 -- import           Brick.Widgets.Panes
-import           Graphics.Vty
+import           Graphics.Vty (defAttr)
 import Defs
 import Draw
 import Events
 -- import Form
-import qualified Graphics.Vty as Vty
+-- import qualified Graphics.Vty as Vty
 import Data.Text (pack)
 
 initBoard :: Board
@@ -27,7 +27,7 @@ initialState = TaskBoard initBoard
 app :: App AppState e ResourceName
 app = App
     { appDraw = drawApp
-    , appChooseCursor = showFirstCursor
+    , appChooseCursor = setCursor
     , appHandleEvent = handleApp
     , appStartEvent = return ()
     , appAttrMap = const $ attrMap defAttr []

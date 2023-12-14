@@ -20,7 +20,7 @@ data ResourceName
   | FormPriority
   deriving (Eq, Ord, Show)
     
-type TaskForm a = Form a () ResourceName
+type TaskForm a e = Form a e ResourceName
 
 data TaskStatus = Todo
                 | InProgress
@@ -50,4 +50,4 @@ data Board = Board
 
 data AppState 
   = TaskBoard Board
-  | AddTaskForm (TaskForm TaskInitData)
+  | AddTaskForm (TaskForm TaskInitData ())

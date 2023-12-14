@@ -22,7 +22,7 @@ import Brick.Focus
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
 
-mkForm :: TaskInitData -> Form TaskInitData () ResourceName
+mkForm :: TaskInitData -> Form TaskInitData e ResourceName
 mkForm =
     let label s w = padBottom (Pad 1) $
                     (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w

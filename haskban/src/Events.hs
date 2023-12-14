@@ -12,6 +12,7 @@ import Data.Text (pack)
 import Form
 import Brick
 import Brick (modify)
+import Brick.Forms (Form(formState))
 
 sampleBoard :: Board
 sampleBoard = Board
@@ -26,19 +27,62 @@ sampleState = TaskBoard sampleBoard
 handleApp :: BrickEvent ResourceName e -> EventM ResourceName AppState ()
 handleApp = \case
     AppEvent _ -> return ()
+
     VtyEvent (Vty.EvKey (Vty.KChar 'q') [Vty.MCtrl]) -> halt
     VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) -> 
         modify(\s -> AddTaskForm (mkForm $ TaskInitData (pack "New Task") (pack "New desc") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low))
-    VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) ->
-        modify(\s -> case s of
-                AddTaskForm form -> TaskBoard (sampleBoard { todo = (formState form) : todo sampleBoard })
-                _ -> sampleState
-            )
-
+    
     VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
         modify(const sampleState )
-        
+
+    ev -> do
+        state <- get
+        case state of
+            TaskBoard b -> modify id
+            AddTaskForm form -> do
+
+                case ev of
+                    VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) ->
+                        modify(\s -> TaskBoard (sampleBoard { todo = formState form : todo sampleBoard }))
+
+                    _ -> do
+                        -- handleForm ev form
+                        -- newState <- gets formState
+                        modify $ \s -> AddTaskForm (mkForm $ TaskInitData (pack "New Task Modified") (pack "New desc mod") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low)
+
+                -- f <- gets formFocus
+                
     _ -> return ()
+
+
+-- handleForm :: BrickEvent ResourceName e -> EventM ResourceName (Form TaskInitData e ResourceName) ()
+-- handleForm ev = do
+--                         (handleFormEvent :: (Eq n) => BrickEvent n e -> EventM n (Form TaskInitData e n) ()) ev
+
+    -- ev -> modify (\s -> case s of
+    --     TaskBoard b -> s
+    --     AddTaskForm form -> 
+    --         handleFormEvent ev
+    --         let st = gets formState
+    --         return st
+            
+            -- f <- gets formFocus
+            -- case ev of
+            --     VtyEvent (V.EvResize {}) -> return ()
+            --     VtyEvent (V.EvKey V.KEsc []) -> halt
+            --     -- Enter quits only when we aren't in the multi-line editor.
+            --     VtyEvent (V.EvKey V.KEnter [])
+            --         | focusGetCurrent f /= Just AddressField -> halt
+            --     _ -> do
+            --         handleFormEvent ev
+
+            --         -- Example of external validation:
+            --         -- Require age field to contain a value that is at least 18.
+            --         st <- gets formState
+            --         modify $ setFieldValid (st^.age >= 18) AgeField
+        -- )
+        
+    
 
         -- modify(\s -> case s of
         --         AddTaskForm form -> AddTaskForm (handleFormEvent e form)

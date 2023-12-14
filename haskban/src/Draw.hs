@@ -9,6 +9,7 @@ import Brick.Widgets.Border
 import qualified Brick.Widgets.Border.Style as BS
 import qualified Brick.Widgets.Center as C
 import Brick.Forms
+import Brick.Focus
 import Lens.Micro ((^.))
 import Data.Text (Text)
 -- import qualified Data.Text as T
@@ -35,7 +36,7 @@ drawTask task =
          , hBorder
          ]
 
-drawForm :: TaskForm TaskInitData -> [Widget ResourceName]
+drawForm :: TaskForm TaskInitData e -> [Widget ResourceName]
 drawForm f =  [C.vCenter $ C.hCenter form]
     where
         form = addBorder "" $ padTop (Pad 1) $ hLimit 50 $ renderForm f
@@ -49,4 +50,9 @@ drawForm f =  [C.vCenter $ C.hCenter form]
         --              "- Enter/Esc quit, mouse interacts with fields"
     
 addBorder :: Text -> Widget ResourceName -> Widget ResourceName
-addBorder t = withBorderStyle BS.unicodeRounded . borderWithLabel (txt t)  
+addBorder t = withBorderStyle BS.unicodeRounded . borderWithLabel (txt t)
+
+setCursor :: AppState -> [CursorLocation ResourceName] -> Maybe (CursorLocation ResourceName)
+setCursor s = case s of
+    TaskBoard board -> showFirstCursor board
+    AddTaskForm form -> focusRingCursor formFocus form

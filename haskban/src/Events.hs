@@ -32,54 +32,13 @@ handleApp = \case
     VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) ->
         modify(\s -> case s of
                 AddTaskForm form -> TaskBoard (sampleBoard { todo = (formState form) : todo sampleBoard })
-                _ -> TaskBoard sampleBoard 
+                _ -> sampleState
             )
 
-    VtyEvent (Vty.EvKey (Vty.KChar 'w') [Vty.MCtrl]) ->
-        modify(\s -> TaskBoard sampleBoard 
-            )
+    VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
+        modify(const sampleState )
         
     _ -> return ()
-        -- do
-        -- maybeForm <- gets _appState
-        -- case maybeForm of
-        --     AddTaskForm form -> if allFieldsValid form
-        --                  then do
-        --                      let task = formState form
-        --                      modify $ tasks %~ (task :)
-        --                      modify $ appState .~ Nothing
-        --                  else modify $ appState ?~ form
-        --     Nothing -> return ()
-
-    -- VtyEvent (Vty.EvKey (Vty.KChar 'm') [Vty.MCtrl]) -> 
-    --     modify(\s -> )
-    -- ev -> modify(\s -> do
-    --     newState <- case s of
-    --         AddTaskForm form -> do
-    --             -- Handle form events and update the form state
-    --             newForm <- handleFormEvent ev form
-    --             return $ case formState newForm of
-    --                 Just updatedData -> AddTaskForm (newForm { formState = Just updatedData })
-    --                 Nothing -> s
-    --         _ -> return s
-    --     modify (\s' -> case newState of
-    --         AddTaskForm _ -> newState
-    --         _ -> s'
-    --         ))
-
-    -- ev -> do
-    --     handleFormEvent ev
-        -- modify(\s -> AddTaskForm (handleFormEvent ev))
-        -- st <- gets formState
-
-    -- VtyEvent e -> do
-    --     newState <- case getFormState of
-    --         AddTaskForm form -> handleFormEvent e form
-    --         _ -> return s
-    --     modify (\s' -> case s of
-    --         AddTaskForm _ -> AddTaskForm newState
-    --         _ -> s'
-    --         )
 
         -- modify(\s -> case s of
         --         AddTaskForm form -> AddTaskForm (handleFormEvent e form)

@@ -29,7 +29,6 @@ library
       Draw
       Events
       Form
-      UIComponents
   other-modules:
       Paths_haskban
   autogen-modules:

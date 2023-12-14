@@ -25,11 +25,71 @@ handleApp = \case
             AddTaskForm form -> handleForm form ev
 
 handleBoard :: Board -> BrickEvent ResourceName e -> EventM ResourceName AppState ()
-handleBoard board ev = case ev of
-    VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) -> 
-        modify(\s -> AddTaskForm (mkForm $ TaskFormData (pack "") (pack "") Low 0 board))
+handleBoard board ev = do
+    let currentPointer = pointer board
+    let currentPointerX = (currentPointer !! 0)
+    let currentPointerY = (currentPointer !! 1)
+    case ev of
+        VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) -> 
+            modify(\s -> AddTaskForm (mkForm $ TaskFormData (pack "") (pack "") Low 0 board))
 
-    _ -> return ()
+        VtyEvent (Vty.EvKey Vty.KUp []) -> do
+            let updatedPointer = [currentPointerX, max 0 (currentPointerY - 1)]
+            modify(\s -> TaskBoard (board { pointer = updatedPointer }))
+
+        VtyEvent (Vty.EvKey Vty.KDown []) -> do
+            let maxPossLen = if currentPointerX == 0
+                then length (todo board) - 1
+                else if currentPointerX == 1
+                then length (inProgress board) - 1
+                else length (done board) - 1
+            let updatedPointer = [currentPointerX, min maxPossLen (currentPointerY + 1)]
+            modify(\s -> TaskBoard (board { pointer = updatedPointer }))
+
+        VtyEvent (Vty.EvKey Vty.KRight []) -> do
+            let updatedPointer = [min 2 (currentPointerX + 1), currentPointerY]
+            modify(\s -> TaskBoard (board { pointer = updatedPointer }))
+
+        VtyEvent (Vty.EvKey Vty.KLeft []) -> do
+            let updatedPointer = [max 0 (currentPointerX - 1), currentPointerY]
+            modify(\s -> TaskBoard (board { pointer = updatedPointer }))
+
+        VtyEvent (Vty.EvKey (Vty.KChar 'r') [Vty.MCtrl]) -> do
+            let todos = todo board
+            let progs = inProgress board
+            let dones = done board
+            let movedCols = moveToRight todos progs dones currentPointerX currentPointerY
+            modify(\s -> TaskBoard (board { todo = movedCols !! 0, inProgress = movedCols !! 1, done = movedCols !! 2, pointer = [0, 0]}))
+
+        VtyEvent (Vty.EvKey (Vty.KChar 'l') [Vty.MCtrl]) -> do
+            let todos = todo board
+            let progs = inProgress board
+            let dones = done board
+            let movedCols = moveToLeft todos progs dones currentPointerX currentPointerY
+            modify(\s -> TaskBoard (board { todo = movedCols !! 0, inProgress = movedCols !! 1, done = movedCols !! 2, pointer = [0, 0]}))
+
+        _ -> return ()
+
+moveToRight :: [TaskData] -> [TaskData] -> [TaskData] -> Int -> Int -> [[TaskData]]
+moveToRight todos progs dones cpx cpy = 
+    if cpx == 0
+    then [removeAtIndex cpy todos, progs ++ [todos !! cpy], dones]
+    else if cpx == 1
+    then [todos, removeAtIndex cpy progs, dones ++ [progs !! cpy]]
+    else [todos, progs, dones]
+
+moveToLeft :: [TaskData] -> [TaskData] -> [TaskData] -> Int -> Int -> [[TaskData]]
+moveToLeft todos progs dones cpx cpy = 
+    if cpx == 0
+    then [todos, progs, dones]
+    else if cpx == 1
+    then [todos ++ [progs !! cpy], removeAtIndex cpy progs, dones]
+    else [todos, progs ++ [dones !! cpy], removeAtIndex cpy dones]
+
+removeAtIndex :: Int -> [a] -> [a]
+removeAtIndex index xs
+  | index < 0 = xs
+  | otherwise = take index xs ++ drop (index + 1) xs
 
 handleForm :: TaskForm TaskFormData () -> BrickEvent ResourceName e -> EventM ResourceName AppState ()
 handleForm form ev = do

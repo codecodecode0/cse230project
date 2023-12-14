@@ -46,6 +46,7 @@ data Board = Board
   { todo :: [TaskData]
   , inProgress :: [TaskData]
   , done :: [TaskData]
+  , pointer :: [Int]
   }
 
 data TaskFormData = TaskFormData {
@@ -60,3 +61,4 @@ makeLenses ''TaskFormData
 data AppState 
   = TaskBoard Board
   | AddTaskForm (TaskForm TaskFormData ())
+  | EditTaskForm (TaskForm TaskFormData ())

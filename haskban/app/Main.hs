@@ -17,11 +17,11 @@ initBoard = Board
   { todo = [TaskData (pack "T1") (pack "D1") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskData (pack "T2") (pack "D2") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
   , inProgress = [TaskData (pack "T3") (pack "D3") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
   , done = [TaskData (pack "T4") (pack "D4") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  , pointer = [0, 0]
   }
 -- Define the initial state
 initialState :: AppState
 initialState = TaskBoard initBoard
-
 
 -- Define the app
 app :: App AppState e ResourceName
@@ -30,7 +30,7 @@ app = App
     , appChooseCursor = neverShowCursor
     , appHandleEvent = handleApp
     , appStartEvent = return ()
-    , appAttrMap = const $ attrMap defAttr []
+    , appAttrMap = const theMap
     }
     
 -- Main function to run the app

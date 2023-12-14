@@ -38,20 +38,20 @@ handleBoard board ev = do
             modify(\s -> TaskBoard (board { pointer = updatedPointer }))
 
         VtyEvent (Vty.EvKey Vty.KDown []) -> do
-            let maxPossLen = if currentPointerX == 0
-                then length (todo board) - 1
-                else if currentPointerX == 1
-                then length (inProgress board) - 1
-                else length (done board) - 1
+            let maxPossLen = getMaxPossibleLen board currentPointerX
             let updatedPointer = [currentPointerX, min maxPossLen (currentPointerY + 1)]
             modify(\s -> TaskBoard (board { pointer = updatedPointer }))
 
         VtyEvent (Vty.EvKey Vty.KRight []) -> do
-            let updatedPointer = [min 2 (currentPointerX + 1), currentPointerY]
+            let updatedPointerX = min 2 (currentPointerX + 1)
+            let updatedPointerY = min (getMaxPossibleLen board updatedPointerX) currentPointerY
+            let updatedPointer = [updatedPointerX, updatedPointerY]
             modify(\s -> TaskBoard (board { pointer = updatedPointer }))
 
         VtyEvent (Vty.EvKey Vty.KLeft []) -> do
-            let updatedPointer = [max 0 (currentPointerX - 1), currentPointerY]
+            let updatedPointerX = max 0 (currentPointerX - 1)
+            let updatedPointerY = min (getMaxPossibleLen board updatedPointerX) currentPointerY
+            let updatedPointer = [updatedPointerX, updatedPointerY]
             modify(\s -> TaskBoard (board { pointer = updatedPointer }))
 
         VtyEvent (Vty.EvKey (Vty.KChar 'r') [Vty.MCtrl]) -> do
@@ -90,6 +90,14 @@ removeAtIndex :: Int -> [a] -> [a]
 removeAtIndex index xs
   | index < 0 = xs
   | otherwise = take index xs ++ drop (index + 1) xs
+
+
+getMaxPossibleLen:: Board -> Int -> Int
+getMaxPossibleLen board x  
+    | x == 0 = length (todo board) - 1
+    | x == 1 = length (inProgress board) - 1
+    | x == 2 = length (done board) - 1
+    | otherwise = 0   -- should never happen
 
 handleForm :: TaskForm TaskFormData () -> BrickEvent ResourceName e -> EventM ResourceName AppState ()
 handleForm form ev = do

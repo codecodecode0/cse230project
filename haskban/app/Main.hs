@@ -13,9 +13,9 @@ import Events (refreshBoard)
 
 initBoard :: Board
 initBoard = MkBoard
-  { _todo = [TaskData (pack "T1") (pack "D1") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskData (pack "T2") (pack "D2") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , _inProgress = [TaskData (pack "T3") (pack "D3") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , _done = [TaskData (pack "T4") (pack "D4") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  { _todo = [TaskData (pack "CSE 230 Project") (pack "HaskTask- Networked TashBoard") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskData (pack "ECE 257A Project") (pack "Using LeoEM for satellite network simulations") Todo (read "2019-01-01 00:00:00 UTC") (pack "Siddhant") Low]
+  , _inProgress = [TaskData (pack "CSE 258 Assignment 2") (pack "Predicting Usefulness of Amazon review") Todo (read "2019-01-01 00:00:00 UTC") (pack "Shril") Low]
+  , _done = [TaskData (pack "ECE 277 Project") (pack "Efficient road finding algorithm") Todo (read "2019-01-01 00:00:00 UTC") (pack "Viraj") Low]
   , _pointer = [0, 0]
   }
 

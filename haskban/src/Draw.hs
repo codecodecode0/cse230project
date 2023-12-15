@@ -12,7 +12,7 @@ import qualified Brick.Widgets.Edit as E
 import Brick.Forms
 import Brick.Focus
 import Lens.Micro ((^.))
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import qualified Graphics.Vty as Vty
 
 
@@ -33,7 +33,7 @@ drawBoard as = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
         help = padTop (Pad 1) $ borderWithLabel (str "Help") body
         body = str $ "Press Ctrl + N to create a new task\n" <>
                      "Use arrow keys to select other tasks\n" <>
-                     "Press Fn 5 to refresh the board manually\n" <>
+                     "Press Ctrl + D to delete the selected task\n" <>
                      "Press Ctrl + R to push the task to next column\n" <>
                      "Press Ctrl + L to push the task to previous column\n" <>
                      "Press Ctrl + Q to quit the app"
@@ -62,8 +62,10 @@ theMap = attrMap Vty.defAttr
 drawTask ::  [Int] -> String -> (Int, TaskData) -> Widget ResourceName
 drawTask pt colTitle (p, task) = 
     if isSelected pt colTitle p
-        then withAttr selectedAttr $ vBox [txtWrap (task ^. title), txtWrap (task ^. description), hBorder]
-        else vBox [txtWrap (task ^. title), txtWrap (task ^. description), hBorder]
+        then withAttr selectedAttr $ row
+        else row
+    where
+        row = vBox [txtWrap (task ^. title), txtWrap (task ^. description), txtWrap (pack "Assigned To: " <> (task ^. assignedToId)), hBorder]
 
 isSelected :: [Int] -> String -> Int -> Bool
 isSelected pt colTitle idx = 

@@ -99,6 +99,10 @@ handleBoard ev = do
             put (app_state & board .~ (curr_board { _todo = movedCols !! 0, _inProgress = movedCols !! 1, _done = movedCols !! 2, _pointer = [0, 0]}))
             -- modify(\s -> TaskBoard (curr_board { todo = movedCols !! 0, inProgress = movedCols !! 1, done = movedCols !! 2, pointer = [0, 0]}))
 
+        VtyEvent (Vty.EvKey (Vty.KChar 'd') [Vty.MCtrl]) -> do
+            let movedCols = deleteTask todos progs dones currentPointerX currentPointerY
+            put (as & board .~ (curr_board { _todo = movedCols !! 0, _inProgress = movedCols !! 1, _done = movedCols !! 2, _pointer = [0, 0]}))
+
         _ -> return ()
 
 getReceiveBody :: TaskFormData -> ReceiveBody
@@ -160,6 +164,14 @@ moveToLeft todos progs dones cpx cpy =
     then [todos ++ [progs !! cpy], removeAtIndex cpy progs, dones]
     else [todos, progs ++ [dones !! cpy], removeAtIndex cpy dones]
 
+deleteTask :: [TaskData] -> [TaskData] -> [TaskData] -> Int -> Int -> [[TaskData]]
+deleteTask todos progs dones cpx cpy = 
+    if cpx == 0
+    then [removeAtIndex cpy todos, progs, dones]
+    else if cpx == 1
+    then [todos, removeAtIndex cpy progs, dones]
+    else [todos, progs, removeAtIndex cpy dones]
+
 removeAtIndex :: Int -> [a] -> [a]
 removeAtIndex index xs
   | index < 0 = xs
@@ -181,16 +193,15 @@ handleForm ev = do
     let currTitle = _nameForm currentForm
     let currDesc = _descForm currentForm
     let currPriority = _taskPriorityForm currentForm
+    let assigned = _assignedToIdForm currentForm
     case ev of
         VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
             put (app_state & state .~ BoardState)
 
         VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> do
-            let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") (pack "") currPriority
-            let send_data = getReceiveBody currentForm
-            let _ = sendPOSTRequest send_data
-            put (app_state & board . todo %~ (++ [newTask]) & state .~ BoardState)
-            
+            let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") assigned currPriority
+            put (as & board . todo %~ (++ [newTask]) & state .~ BoardState)
+
 
         _ -> zoom form $ handleFormEvent ev
 

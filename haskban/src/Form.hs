@@ -22,12 +22,12 @@ mkForm =
     let label s w = padBottom (Pad 1) $ (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
     in newForm [ label "Title:" @@= editTextField nameForm FormTitle (Just 1)
                , label "Description:" @@= editTextField descForm FormDescription (Just 1)
+              --  , label "Due Date" @@= editShowableField dueDateForm FormDueDate
+               , label "Assigned To" @@= editTextField assignedToIdForm FormAssignedToId (Just 1)
                , label "Status" @@= radioField statusForm [ (Todo,FormStatus, "Todo")
                                                       , (InProgress,FormStatus, "InProgress")
                                                       , (Completed,FormStatus, "Completed")
                                                       ]
-              --  , label "Due Date" @@= editShowableFieldWithValidate dueDateForm FormDueDate validDate
-               , label "Assigned To" @@= editTextField assignedToIdForm FormAssignedToId (Just 1)
                , label "Priority:" @@= radioField taskPriorityForm [ (Low,FormPriority, "Low")
                                                           , (Medium,FormPriority, "Medium")
                                                           , (High,FormPriority, "High")

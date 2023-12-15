@@ -23,8 +23,15 @@ jobs:
         stack-version: '2.11.1'
         enable-stack: True
     
-    - name: Install dependencies
+    - name: Build Server
+      working-directory: ./Server
       run: |
         stack build
-    - name: Run tests
+    - name: Build Client
+      working-directory: ./Client
+      run: |
+        stack build
+   
+    - name: Run Client tests
+      working-directory: ./Client
       run: stack test

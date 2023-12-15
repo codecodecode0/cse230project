@@ -77,7 +77,7 @@ makeLenses ''Board
 data FormEvent = Int
 
 data CurrentState
-  = BoardState | AddFormState | FilterState | EditFormState
+  = BoardState | AddFormState | FilterState | EditFormState | HelpState
 
 data FilterFormData = FilterFormData {
   _filterAssignedToIdForm :: T.Text

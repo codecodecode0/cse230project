@@ -32,6 +32,7 @@ handleApp = \case
             AddFormState  -> handleForm ev
             FilterState -> handleFilter ev
             EditFormState -> handleEditForm ev
+            HelpState -> handleHelp ev
 
 handleBoard :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
 handleBoard ev = do
@@ -48,6 +49,9 @@ handleBoard ev = do
         VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) ->
             put (app_state & state .~ AddFormState & form .~ (mkForm $ TaskData (pack "") (pack "") Todo Nothing (pack "") Low))
 
+        VtyEvent (Vty.EvKey (Vty.KChar 'o') [Vty.MCtrl]) -> 
+            put (app_state & state .~ HelpState)
+        
         VtyEvent (Vty.EvKey (Vty.KChar 'e') [Vty.MCtrl]) ->
             put (app_state & state .~ EditFormState & form .~ (mkForm $ getFormData currentPointerX currentPointerY todos progs dones)) 
             
@@ -228,9 +232,6 @@ handleFilter ev = do
         VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> 
             put (app_state & filteredBoard .~ (filterBoardResults (app_state ^. board) (unpack currAssignedToName)) & state .~ BoardState)
 
-
-            
-
         _ -> zoom filterForm $ handleFormEvent ev
 
 
@@ -282,3 +283,11 @@ handleEditForm ev = do
 
         _ -> zoom form $ handleFormEvent ev
 
+handleHelp :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
+handleHelp ev = do
+    app_state <- get
+    case ev of
+        VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
+            put (app_state & state .~ BoardState)
+
+        _ -> return ()

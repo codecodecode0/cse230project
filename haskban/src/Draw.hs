@@ -22,6 +22,7 @@ drawApp as = case as ^. state of
     AddFormState -> drawForm as
     FilterState -> drawFilter as
     EditFormState -> drawForm as
+    HelpState -> drawHelp as
 
 drawBoard :: AppState -> [Widget ResourceName]
 drawBoard as = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
@@ -32,13 +33,24 @@ drawBoard as = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
                    drawColumn pt "In Progress" (curr_board ^. inProgress), 
                    drawColumn pt "Done" (curr_board ^. done)]
         help = padTop (Pad 1) $ borderWithLabel (str "Help") body
+        body = str $ "Press Ctrl + H to view Help\n"
+
+drawHelp :: AppState -> [Widget ResourceName]
+drawHelp as = [C.vCenter $ C.hCenter help]
+    where
+        help = padTop (Pad 1) $ borderWithLabel (str "Help") body
         body = str $ "Press Ctrl + N to create a new task\n" <>
                      "Use arrow keys to select other tasks\n" <>
+                     "Press Ctrl + E to edit a task\n" <>
                      "Press Ctrl + D to delete the selected task\n" <>
                      "Press Ctrl + R to push the task to next column\n" <>
                      "Press Ctrl + L to push the task to previous column\n" <>
+                     "Press Ctrl + F to create a filter by Assigned To \n" <>
+                     "Press Ctrl + Y to view filtered tasks\n" <>
+                     "Press Ctrl + Z to remove filter view\n" <>
                      "Press Ctrl + Q to quit the app"
-            
+
+
 drawColumn :: [Int] -> String -> [TaskData] -> Widget ResourceName
 drawColumn pt colTitle tasks =
     if length tasks == 0

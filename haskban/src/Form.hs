@@ -63,4 +63,4 @@ mkForm =
 mkFilterForm :: FilterFormData -> Form FilterFormData e ResourceName
 mkFilterForm = 
   let label s w = padBottom (Pad 1) $ (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
-    in newForm [ label "FilterTasksby:" @@= editTextField filterAssignedToIdForm FormAssignedToId (Just 1)]
+    in newForm [ label "FilterTasksby Assigned to:" @@= editTextField filterAssignedToIdForm FormAssignedToId (Just 1)]

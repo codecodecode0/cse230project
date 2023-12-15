@@ -42,23 +42,32 @@ data TaskData = TaskData {
 }
 makeLenses ''TaskData
 
-data Board = Board
-  { todo :: [TaskData]
-  , inProgress :: [TaskData]
-  , done :: [TaskData]
-  , pointer :: [Int]
+data Board = MkBoard
+  { _todo :: [TaskData]
+  , _inProgress :: [TaskData]
+  , _done :: [TaskData]
+  , _pointer :: [Int]
   }
+makeLenses ''Board
 
 data TaskFormData = TaskFormData {
-  _name :: T.Text,
-  _desc :: T.Text,
-  _taskPriority :: TaskPriority,
-  _cursor :: Int,
-  _currentBoard :: Board
+  _nameForm :: T.Text,
+  _descForm :: T.Text,
+  _taskPriorityForm :: TaskPriority,
+  _statusForm :: TaskStatus,
+  _assignedToIdForm :: T.Text
 }
 makeLenses ''TaskFormData
 
-data AppState 
-  = TaskBoard Board
-  | AddTaskForm (TaskForm TaskFormData ())
-  | EditTaskForm (TaskForm TaskFormData ())
+
+data FormEvent = Int
+
+data CurrentState
+  = BoardState | FormState
+
+data AppState = MkAppState {
+  _board :: Board,
+  _form :: TaskForm TaskFormData FormEvent,
+  _state :: CurrentState
+}
+makeLenses ''AppState

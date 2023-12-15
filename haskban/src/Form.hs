@@ -23,16 +23,38 @@ mkForm :: TaskFormData -> Form TaskFormData e ResourceName
 mkForm =
     let label s w = padBottom (Pad 1) $
                     (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
-    in newForm [ label "Title:" @@= editTextField name FormTitle (Just 1)
-               , label "Description:" @@= editTextField desc FormDescription (Just 1)
-              --  , label "Status" @@= radioField status [ (Todo,FormStatus, "Todo")
-              --                                         , (InProgress,FormStatus, "InProgress")
-              --                                         , (Completed,FormStatus, "Completed")
-              --                                         ]
-              --  , label "Due Date" @@= editShowableField dueDate FormDueDate
-              --  , label "Assigned To" @@= editTextField assignedToId FormAssignedToId (Just 1)
-               , label "Priority:" @@= radioField taskPriority [ (Low,FormPriority, "Low")
+    in newForm [ label "Title:" @@= editTextField nameForm FormTitle (Just 1)
+               , label "Description:" @@= editTextField descForm FormDescription (Just 1)
+               , label "Status" @@= radioField statusForm [ (Todo,FormStatus, "Todo")
+                                                      , (InProgress,FormStatus, "InProgress")
+                                                      , (Completed,FormStatus, "Completed")
+                                                      ]
+              --  , label "Due Date" @@= editShowableField dueDateForm FormDueDate
+               , label "Assigned To" @@= editTextField assignedToIdForm FormAssignedToId (Just 1)
+               , label "Priority:" @@= radioField taskPriorityForm [ (Low,FormPriority, "Low")
                                                           , (Medium,FormPriority, "Medium")
                                                           , (High,FormPriority, "High")
                                                           ]
                ]
+
+
+-- mkForm :: TaskFormData -> Form TaskFormData e ResourceName
+-- mkForm = 
+--   newForm [
+--     (str "Name: " <+>) @@= 
+--       editTextField nameForm FormTitle (Just 1),
+--     (str "Description: " <+>) @@=
+--       editTextField descForm FormDescription (Just 1),
+--     (str "Priority: " <+>) @@=
+--       radioField taskPriorityForm [ (Low,FormPriority, "Low")
+--                               , (Medium,FormPriority, "Medium")
+--                               , (High,FormPriority, "High")
+--                               ],
+--     (str "Status: " <+>) @@=
+--       radioField statusForm [ (Todo,FormStatus, "Todo")
+--                         , (InProgress,FormStatus, "InProgress")
+--                         , (Completed,FormStatus, "Completed")
+--                         ],
+--     (str "Assigned To: " <+>) @@=
+--       editTextField assignedToIdForm FormAssignedToId (Just 1)
+--   ]

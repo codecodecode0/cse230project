@@ -8,6 +8,7 @@ import Brick
 import Brick.Widgets.Border
 import qualified Brick.Widgets.Border.Style as BS
 import qualified Brick.Widgets.Center as C
+import qualified Brick.Widgets.Edit as E
 import Brick.Forms
 import Brick.Focus
 import Lens.Micro ((^.))
@@ -16,17 +17,18 @@ import qualified Graphics.Vty as Vty
 
 
 drawApp :: AppState -> [Widget ResourceName]
-drawApp g = case g of
-    TaskBoard board -> drawBoard board
-    AddTaskForm form -> drawForm form
+drawApp as = case as ^. state of
+    BoardState -> drawBoard as
+    FormState -> drawForm as
 
-drawBoard :: Board -> [Widget ResourceName]
-drawBoard board = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
+drawBoard :: AppState -> [Widget ResourceName]
+drawBoard as = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
     where
-        pt = pointer board
-        bd = hBox [drawColumn pt "To Do" (todo board), 
-                   drawColumn pt "In Progress" (inProgress board), 
-                   drawColumn pt "Done" (done board)]
+        curr_board = as ^. board
+        pt = curr_board ^. pointer
+        bd = hBox [drawColumn pt "To Do" (curr_board ^. todo), 
+                   drawColumn pt "In Progress" (curr_board ^. inProgress), 
+                   drawColumn pt "Done" (curr_board ^. done)]
         help = padTop (Pad 1) $ borderWithLabel (str "Help") body
         body = str $ "Press Ctrl + N to create a new task\n" <>
                      "Use arrow keys to select other tasks\n" <>
@@ -49,7 +51,10 @@ selectedAttr = attrName "selected"
 
 theMap :: AttrMap
 theMap = attrMap Vty.defAttr
-  [ (selectedAttr, Vty.black `on` Vty.white)
+  [ (selectedAttr, Vty.black `on` Vty.white),
+    (E.editFocusedAttr, Vty.black `on` Vty.white),
+    (formAttr, Vty.defAttr),
+    (focusedFormInputAttr, Vty.blue `on` Vty.white)
   ]
 
 drawTask ::  [Int] -> String -> (Int, TaskData) -> Widget ResourceName
@@ -72,10 +77,11 @@ isSelected pt colTitle idx =
     else False
 
 
-drawForm :: TaskForm TaskFormData e -> [Widget ResourceName]
-drawForm f =  [C.vCenter $ C.hCenter form <=> C.hCenter help]
+drawForm :: AppState -> [Widget ResourceName]
+drawForm as =  [C.vCenter $ C.hCenter rendered_form <=> C.hCenter help]
     where
-        form = addBorder "" $ padTop (Pad 1) $ hLimit 50 $ renderForm f
+        curr_form = as ^. form
+        rendered_form = addBorder "" $ padTop (Pad 1) $ hLimit 50 $ renderForm curr_form
         help = padTop (Pad 1) $ borderWithLabel (str "Help") body
         body = str $ "Press Enter or Tab to move to the next field\n" <>
                      "Press Ctrl + S to save the task\n" <>

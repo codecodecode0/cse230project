@@ -3,31 +3,35 @@ module Main where
 import           Brick
 import Brick.Widgets.Border
 import Data.Text.Internal as T
--- import           Brick.Widgets.Panes
 import           Graphics.Vty (defAttr)
 import Defs
 import Draw
 import Events
--- import Form
--- import qualified Graphics.Vty as Vty
+import Form
 import Data.Text (pack)
 
 initBoard :: Board
-initBoard = Board
-  { todo = [TaskData (pack "T1") (pack "D1") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskData (pack "T2") (pack "D2") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , inProgress = [TaskData (pack "T3") (pack "D3") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , done = [TaskData (pack "T4") (pack "D4") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
-  , pointer = [0, 0]
+initBoard = MkBoard
+  { _todo = [TaskData (pack "T1") (pack "D1") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low, TaskData (pack "T2") (pack "D2") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  , _inProgress = [TaskData (pack "T3") (pack "D3") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  , _done = [TaskData (pack "T4") (pack "D4") Todo (read "2019-01-01 00:00:00 UTC") (pack "") Low]
+  , _pointer = [0, 0]
   }
+
+
 -- Define the initial state
 initialState :: AppState
-initialState = TaskBoard initBoard
+initialState = MkAppState
+  { _board = initBoard
+  , _state = BoardState
+  , _form = mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "")
+  }
 
 -- Define the app
-app :: App AppState e ResourceName
+app :: App AppState FormEvent ResourceName
 app = App
     { appDraw = drawApp
-    , appChooseCursor = neverShowCursor
+    , appChooseCursor = showFirstCursor
     , appHandleEvent = handleApp
     , appStartEvent = return ()
     , appAttrMap = const theMap

@@ -105,18 +105,25 @@ getTask allTasks (Just tid) = do
     let tasks = unsafePerformIO (readTVarIO allTasks) 
     case (tid, M.lookup tid tasks) of
         (_, Just task_body) -> [task_body]
-        (-1, Nothing) -> M.elems tasks
         _ -> []
+
+getAllTasks :: TVar Task -> [TaskBody]
+getAllTasks allTasks = do
+    let tasks = unsafePerformIO (readTVarIO allTasks)
+    M.elems tasks
 
 handleGETrequest :: TVar Task -> Request -> Response
 handleGETrequest allTasks request = do
     let queries = queryString request
-    let tid = parseQueryItem (L.head queries)
-    let queriedTask = getTask allTasks tid
-    if null queriedTask then
-        responseLBS status404 [("Content-Type", "text/plain")] "Task not found" 
-    else
-        responseLBS status200 [("Content-Type", "application/json")] (encode queriedTask)
+    if null queries then
+        responseLBS status200 [("Content-Type", "application/json")] (encode $ getAllTasks allTasks)
+    else do
+        let tid = parseQueryItem (L.head queries)
+        let queriedTask = getTask allTasks tid
+        if null queriedTask then
+            responseLBS status404 [("Content-Type", "text/plain")] "Task not found" 
+        else
+            responseLBS status200 [("Content-Type", "application/json")] (encode queriedTask)
 
 createTask :: TVar Task -> ReceiveBody -> IO ()
 createTask allTasks newTask = do
@@ -137,30 +144,26 @@ createTask allTasks newTask = do
         current_time = unsafePerformIO getCurrentTime
 
 
--- updateTask :: TVar Task -> TaskBody -> IO ()
--- updateTask allTasks currTask = do
---     atomically writeTask
---     where
---         writeTask = do
---             tasks <- readTVar allTasks
---             let currId = taskId currTask
---             case (currId, M.lookup tasks currId) of
---                 (Nothing, _) -> return ()
---                 (_, Nothing) -> return ()
---                 (Just tid, Just prevTask) -> do
---                     let toAddTask = Task {
---                         taskId = tid,
---                         receievedBody = currTask,
---                         taskCreatedAt = prevTask.taskCreatedAt,
---                         taskUpdatedAt = getCurrentTime
---                     }
---                     let updatedTasks = M.insert tid toAddTask tasks
---                     (writeTVar allTasks updatedTasks)
-
--- handleDELETErequest :: TVar Task -> Request -> Response
--- handleDELETErequest allTasks request = do
-    
-
+updateTask :: TVar Task -> ReceiveBody -> Maybe Int -> IO ()
+updateTask allTasks currTask update_id = do
+    atomically writeTask
+    where
+        writeTask = do
+            tasks <- readTVar allTasks
+            case update_id of
+                Nothing -> return ()
+                Just tid -> case M.lookup tid tasks of
+                    Nothing -> return ()
+                    Just prevTask -> do
+                        let toAddTask = Task {
+                            _taskId = update_id,
+                            _receievedBody = currTask,
+                            _taskUpdatedAt = current_time,
+                            _taskCreatedAt = _taskCreatedAt prevTask
+                        }
+                        let updatedTasks = M.insert tid toAddTask tasks
+                        (writeTVar allTasks updatedTasks)
+        current_time = unsafePerformIO getCurrentTime
 
 deleteTask :: TVar Task -> Maybe Int -> IO ()
 deleteTask _ Nothing = putStrLn "Invalid task id"
@@ -178,16 +181,21 @@ deleteTask allTasks (Just tid) = do
 app :: TVar Task -> Application
 app allTasks request respond = case requestMethod request of
     "GET" -> respond (handleGETrequest allTasks request)
+    
     "POST" -> do
         body <- strictRequestBody request
         case decode body of
             Just newTask -> (createTask allTasks newTask) >> respond (responseLBS status200 [("Content-Type", "text/plain")] "Task created successfully")
             Nothing -> putStrLn "Invalid request body" >> respond (responseLBS status400 [("Content-Type", "text/plain")] "Invalid request body")
-    -- "PUT" -> do
-    --     body <- strictRequestBody request
-    --     case decode body of
-    --         Just currTask -> (updateTask allTasks currTask) >> respond (responseLBS status200 [("Content-Type", "text/plain")] "Task updated successfully")
-    --         Nothing -> putStrLn "Invalid request body" >> respond (responseLBS status400 [("Content-Type", "text/plain")] "Invalid request body")
+    
+    "PUT" -> do
+        let queries = queryString request
+        let tid = parseQueryItem (L.head queries)
+        body <- strictRequestBody request
+        case decode body of
+            Just currTask -> (updateTask allTasks currTask tid) >> respond (responseLBS status200 [("Content-Type", "text/plain")] "Task updated successfully")
+            Nothing -> putStrLn "Invalid request body" >> respond (responseLBS status400 [("Content-Type", "text/plain")] "Invalid request body")
+    
     "DELETE" -> do
         let queries = queryString request
         let tid = parseQueryItem (L.head queries)

@@ -9,6 +9,7 @@ import Draw
 import Events
 import Form
 import Data.Text (pack)
+import Events (refreshBoard)
 
 initBoard :: Board
 initBoard = MkBoard
@@ -24,7 +25,7 @@ initialState :: AppState
 initialState = MkAppState
   { _board = initBoard
   , _state = BoardState
-  , _form = mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "")
+  , _form = mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "") Nothing
   }
 
 -- Define the app
@@ -33,7 +34,7 @@ app = App
     { appDraw = drawApp
     , appChooseCursor = showFirstCursor
     , appHandleEvent = handleApp
-    , appStartEvent = return ()
+    , appStartEvent = refreshBoard initialState 
     , appAttrMap = const theMap
     }
     

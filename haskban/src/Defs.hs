@@ -79,7 +79,8 @@ data TaskFormData = TaskFormData {
   _descForm :: T.Text,
   _taskPriorityForm :: TaskPriority,
   _statusForm :: TaskStatus,
-  _assignedToIdForm :: T.Text
+  _assignedToIdForm :: T.Text,
+  _dueDateForm :: Maybe UTCTime
 }
 makeLenses ''TaskFormData
 

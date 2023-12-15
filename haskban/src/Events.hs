@@ -11,13 +11,14 @@ import Brick
 import Brick.Forms
 import Lens.Micro
 import qualified Graphics.Vty as Vty
-import Control.Monad (void)
+import Control.Monad (void, join)
 import Data.Text (pack,unpack)
 import Form
 import Data.IORef
 import ServerData
 import Data.Time
 import GHC.IO (unsafePerformIO)
+import Graphics.Vty (Vty(refresh))
 
 handleApp :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
 handleApp = \case
@@ -38,10 +39,10 @@ handleBoard app_state ev = do
     let todos = curr_board ^. todo
     let progs = curr_board ^. inProgress
     let dones = curr_board ^. done
-
+    refreshBoard app_state
     case ev of
         VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) ->
-            put (app_state & state .~ FormState & form .~ (mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "")))
+            put (app_state & state .~ FormState & form .~ (mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "") (Nothing)))
             -- modify (\s -> (mkForm $ TaskFormData (pack "") (pack "") Low 0 board Todo (pack "")))
 
         VtyEvent (Vty.EvKey Vty.KUp []) -> do
@@ -70,10 +71,8 @@ handleBoard app_state ev = do
             -- modify(\s -> TaskBoard (curr_board { pointer = updatedPointer }))
 
         -- Press Fn + 5 to update the board from the server
-        VtyEvent (Vty.EvKey (Vty.KFun 5) []) -> do
-            let received_data = unsafePerformIO $ sendGETRequest (-1)
-            let updatedBoard = filterTasks received_data
-            put (app_state & board .~ updatedBoard)
+        VtyEvent (Vty.EvKey (Vty.KFun 5) []) -> 
+            refreshBoard app_state
 
         VtyEvent (Vty.EvKey (Vty.KChar 'r') [Vty.MCtrl]) -> do
             let movedCols = moveToRight todos progs dones currentPointerX currentPointerY
@@ -87,6 +86,22 @@ handleBoard app_state ev = do
             -- modify(\s -> TaskBoard (curr_board { todo = movedCols !! 0, inProgress = movedCols !! 1, done = movedCols !! 2, pointer = [0, 0]}))
 
         _ -> return ()
+
+getReceiveBody :: TaskFormData -> ReceiveBody
+getReceiveBody taskFormData =
+    let curr_title = taskFormData ^. nameForm
+        curr_desc = taskFormData ^. descForm
+        curr_priority = taskFormData ^. taskPriorityForm
+        curr_status = taskFormData ^. statusForm
+        curr_assignedToId = taskFormData ^. assignedToIdForm
+        curr_dueDate = taskFormData ^. dueDateForm
+    in Receive (unpack curr_title) (Just $ unpack curr_desc) (unpack curr_assignedToId) curr_status curr_dueDate (Just $ unpack curr_assignedToId) curr_priority
+
+refreshBoard :: AppState -> EventM ResourceName AppState ()
+refreshBoard app_state = do
+        let received_data = unsafePerformIO $ sendGETRequest (-1)
+        let updatedBoard = filterTasks received_data
+        put (app_state & board .~ updatedBoard)
 
 taskBody_Data :: TaskBody -> TaskData
 taskBody_Data taskBody =
@@ -156,7 +171,11 @@ handleForm app_state ev = do
 
         VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> do
             let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") (pack "") currPriority
+            let send_data = getReceiveBody currentForm
+            let _ = sendPOSTRequest send_data
             put (app_state & board . todo %~ (++ [newTask]) & state .~ BoardState)
+            
+
 
 
         _ -> zoom form $ handleFormEvent ev

@@ -249,6 +249,8 @@ filterBoardResults curr_board filterString =
         _pointer = [0, 0]
     } 
 
+replaceAtIndex :: Int -> a -> [a] -> [a]
+replaceAtIndex n item ls = a ++ (item:b) where (a, (_:b)) = splitAt n ls
 
 handleEditForm :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
 handleEditForm ev = do
@@ -258,7 +260,6 @@ handleEditForm ev = do
     let currTitle = _title currentForm
     let currDesc = _description currentForm
     let currPriority = _priority currentForm
-    let currStatus = _status currentForm
     let assigned = _assignedToId currentForm
     let currentPointer = app_state ^. board . pointer
     let cX = currentPointer !! 0
@@ -272,17 +273,11 @@ handleEditForm ev = do
 
         VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> do
             let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") assigned currPriority
-            let movedCols = deleteTask todos progs dones cX cY
-            -- put (case cX of
-            --         0 -> app_state & board . todo .~ (movedCols !! 0) & state .~ BoardState
-            --         1 -> app_state & board . inProgress .~ (movedCols !! 1) & state .~ BoardState
-            --         2 -> app_state & board . done .~ (movedCols !! 2) & state .~ BoardState
-            --         _ -> error "Invalid Column")
-            put (app_state & board .~ ((app_state ^. board) { _todo = movedCols !! 0, _inProgress = movedCols !! 1, _done = movedCols !! 2}))
-            put (case currStatus of
-                    Todo -> app_state & board . todo %~ (++ [newTask]) & state .~ BoardState
-                    InProgress -> app_state & board . inProgress %~ (++ [newTask]) & state .~ BoardState
-                    Completed -> app_state & board . done %~ (++ [newTask]) & state .~ BoardState)
+            put (case cX of
+                    0 -> app_state & board . todo .~ (replaceAtIndex cY newTask todos) & state .~ BoardState
+                    1 -> app_state & board . inProgress .~ (replaceAtIndex cY newTask progs) & state .~ BoardState
+                    2 -> app_state & board . done .~ (replaceAtIndex cY newTask dones) & state .~ BoardState
+                    _ -> error "Invalid Column")
 
 
         _ -> zoom form $ handleFormEvent ev

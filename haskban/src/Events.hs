@@ -29,8 +29,9 @@ handleApp = \case
         app_state <- get
         case (app_state ^. state) of
             BoardState -> handleBoard ev
-            FormState  -> handleForm ev
+            AddFormState  -> handleForm ev
             FilterState -> handleFilter ev
+            EditFormState -> handleEditForm ev
 
 handleBoard :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
 handleBoard ev = do
@@ -45,12 +46,13 @@ handleBoard ev = do
     -- refreshBoard
     case ev of
         VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) ->
-            put (app_state & state .~ FormState & form .~ (mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "") (Nothing)))
-            -- modify (\s -> (mkForm $ TaskFormData (pack "") (pack "") Low 0 board Todo (pack "")))
+            put (app_state & state .~ AddFormState & form .~ (mkForm $ TaskData (pack "") (pack "") Todo Nothing (pack "") Low))
 
+        VtyEvent (Vty.EvKey (Vty.KChar 'e') [Vty.MCtrl]) ->
+            put (app_state & state .~ EditFormState & form .~ (mkForm $ getFormData currentPointerX currentPointerY todos progs dones)) 
+            
         VtyEvent (Vty.EvKey (Vty.KChar 'f') [Vty.MCtrl]) ->
             put (app_state & state .~ FilterState & filterForm .~ (mkFilterForm $ FilterFormData (pack "")))
-            -- modify (\s -> (mkFilterForm $ FilterFormData (pack "")))
 
         VtyEvent (Vty.EvKey (Vty.KChar 'y') [Vty.MCtrl]) -> 
             put (app_state & fullBoardCopy .~ curr_board) >> 
@@ -62,13 +64,11 @@ handleBoard ev = do
         VtyEvent (Vty.EvKey Vty.KUp []) -> do
             let updatedPointer = [currentPointerX, max 0 (currentPointerY - 1)]
             put (app_state & board . pointer .~ updatedPointer)
-            -- modify(\s -> TaskBoard (curr_board { pointer = updatedPointer }))
 
         VtyEvent (Vty.EvKey Vty.KDown []) -> do
             let maxPossLen = getMaxPossibleLen curr_board currentPointerX
             let updatedPointer = [currentPointerX, min maxPossLen (currentPointerY + 1)]
             put (app_state & board . pointer .~ updatedPointer)
-            -- modify(\s -> TaskBoard (curr_board { pointer = updatedPointer }))
 
         VtyEvent (Vty.EvKey Vty.KRight []) -> do
             let updatedPointerX = min 2 (currentPointerX + 1)
@@ -101,18 +101,27 @@ handleBoard ev = do
 
         VtyEvent (Vty.EvKey (Vty.KChar 'd') [Vty.MCtrl]) -> do
             let movedCols = deleteTask todos progs dones currentPointerX currentPointerY
-            put (as & board .~ (curr_board { _todo = movedCols !! 0, _inProgress = movedCols !! 1, _done = movedCols !! 2, _pointer = [0, 0]}))
+            put (app_state & board .~ (curr_board { _todo = movedCols !! 0, _inProgress = movedCols !! 1, _done = movedCols !! 2, _pointer = [0, 0]}))
 
         _ -> return ()
 
-getReceiveBody :: TaskFormData -> ReceiveBody
-getReceiveBody taskFormData =
-    let curr_title = taskFormData ^. nameForm
-        curr_desc = taskFormData ^. descForm
-        curr_priority = taskFormData ^. taskPriorityForm
-        curr_status = taskFormData ^. statusForm
-        curr_assignedToId = taskFormData ^. assignedToIdForm
-        curr_dueDate = taskFormData ^. dueDateForm
+getFormData :: Int -> Int -> [TaskData] -> [TaskData] -> [TaskData] -> TaskData
+getFormData cpx cpy todos progs dones =
+    if cpx == 0
+    then todos !! cpy
+    else if cpx == 1
+    then progs !! cpy
+    else dones !! cpy
+
+
+getReceiveBody :: TaskData -> ReceiveBody
+getReceiveBody taskData =
+    let curr_title = taskData ^. title
+        curr_desc = taskData ^. description
+        curr_priority = taskData ^. priority
+        curr_status = taskData ^. status
+        curr_assignedToId = taskData ^. assignedToId
+        curr_dueDate = taskData ^. dueDate
     in Receive (unpack curr_title) (Just $ unpack curr_desc) (unpack curr_assignedToId) curr_status curr_dueDate (Just $ unpack curr_assignedToId) curr_priority
 
 refreshBoard :: EventM ResourceName AppState ()
@@ -131,7 +140,7 @@ taskBody_Data taskBody =
         curr_taskDueDate = curr_body^.taskDueDate
         curr_taskAssignedToId = curr_body^.taskAssignedToId
         curr_taskPriority = curr_body^.taskPriority
-    in TaskData (pack curr_taskTitle) (pack $ get_string curr_taskDescription) curr_taskStatus (get_time curr_taskDueDate) (pack $ get_string curr_taskAssignedToId) curr_taskPriority
+    in TaskData (pack curr_taskTitle) (pack $ get_string curr_taskDescription) curr_taskStatus (Just $ get_time curr_taskDueDate) (pack $ get_string curr_taskAssignedToId) curr_taskPriority
 
 get_string :: Maybe String -> String
 get_string (Just s) = s
@@ -190,17 +199,17 @@ handleForm ev = do
     app_state <- get
     let curr_form = app_state ^. form
     let currentForm = formState curr_form
-    let currTitle = _nameForm currentForm
-    let currDesc = _descForm currentForm
-    let currPriority = _taskPriorityForm currentForm
-    let assigned = _assignedToIdForm currentForm
+    let currTitle = _title currentForm
+    let currDesc = _description currentForm
+    let currPriority = _priority currentForm
+    let assigned = _assignedToId currentForm
     case ev of
         VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
             put (app_state & state .~ BoardState)
 
         VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> do
             let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") assigned currPriority
-            put (as & board . todo %~ (++ [newTask]) & state .~ BoardState)
+            put (app_state & board . todo %~ (++ [newTask]) & state .~ BoardState)
 
 
         _ -> zoom form $ handleFormEvent ev
@@ -239,3 +248,42 @@ filterBoardResults curr_board filterString =
         _done = filteredDones,
         _pointer = [0, 0]
     } 
+
+
+handleEditForm :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
+handleEditForm ev = do
+    app_state <- get
+    let curr_form = app_state ^. form
+    let currentForm = formState curr_form
+    let currTitle = _title currentForm
+    let currDesc = _description currentForm
+    let currPriority = _priority currentForm
+    let currStatus = _status currentForm
+    let assigned = _assignedToId currentForm
+    let currentPointer = app_state ^. board . pointer
+    let cX = currentPointer !! 0
+    let cY = currentPointer !! 1
+    let todos = app_state ^. board . todo
+    let progs = app_state ^. board . inProgress
+    let dones = app_state ^. board . done
+    case ev of
+        VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
+            put (app_state & state .~ BoardState)
+
+        VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> do
+            let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") assigned currPriority
+            let movedCols = deleteTask todos progs dones cX cY
+            -- put (case cX of
+            --         0 -> app_state & board . todo .~ (movedCols !! 0) & state .~ BoardState
+            --         1 -> app_state & board . inProgress .~ (movedCols !! 1) & state .~ BoardState
+            --         2 -> app_state & board . done .~ (movedCols !! 2) & state .~ BoardState
+            --         _ -> error "Invalid Column")
+            put (app_state & board .~ ((app_state ^. board) { _todo = movedCols !! 0, _inProgress = movedCols !! 1, _done = movedCols !! 2}))
+            put (case currStatus of
+                    Todo -> app_state & board . todo %~ (++ [newTask]) & state .~ BoardState
+                    InProgress -> app_state & board . inProgress %~ (++ [newTask]) & state .~ BoardState
+                    Completed -> app_state & board . done %~ (++ [newTask]) & state .~ BoardState)
+
+
+        _ -> zoom form $ handleFormEvent ev
+

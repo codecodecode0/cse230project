@@ -19,8 +19,9 @@ import qualified Graphics.Vty as Vty
 drawApp :: AppState -> [Widget ResourceName]
 drawApp as = case as ^. state of
     BoardState -> drawBoard as
-    FormState -> drawForm as
+    AddFormState -> drawForm as
     FilterState -> drawFilter as
+    EditFormState -> drawForm as
 
 drawBoard :: AppState -> [Widget ResourceName]
 drawBoard as = [C.vCenter $ C.hCenter bd <=> C.hCenter help]

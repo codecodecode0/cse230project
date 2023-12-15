@@ -39,7 +39,7 @@ data TaskData = TaskData {
   _title :: T.Text,
   _description :: T.Text,
   _status :: TaskStatus,
-  _dueDate :: UTCTime,
+  _dueDate :: Maybe UTCTime,
   _assignedToId :: T.Text,
   _priority :: TaskPriority
 }
@@ -74,21 +74,10 @@ data Board = MkBoard
   }
 makeLenses ''Board
 
-data TaskFormData = TaskFormData {
-  _nameForm :: T.Text,
-  _descForm :: T.Text,
-  _taskPriorityForm :: TaskPriority,
-  _statusForm :: TaskStatus,
-  _assignedToIdForm :: T.Text,
-  _dueDateForm :: Maybe UTCTime
-}
-makeLenses ''TaskFormData
-
-
 data FormEvent = Int
 
 data CurrentState
-  = BoardState | FormState | FilterState
+  = BoardState | AddFormState | FilterState | EditFormState
 
 data FilterFormData = FilterFormData {
   _filterAssignedToIdForm :: T.Text
@@ -98,7 +87,7 @@ makeLenses ''FilterFormData
 
 data AppState = MkAppState {
   _board :: Board,
-  _form :: TaskForm TaskFormData FormEvent,
+  _form :: TaskForm TaskData FormEvent,
   _state :: CurrentState,
   _fullBoardCopy :: Board,
   _filteredBoard :: Board,

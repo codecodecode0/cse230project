@@ -33,13 +33,14 @@ drawBoard as = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
                    drawColumn pt "In Progress" (curr_board ^. inProgress), 
                    drawColumn pt "Done" (curr_board ^. done)]
         help = padTop (Pad 1) $ borderWithLabel (str "Help") body
-        body = str $ "Press Ctrl + H to view Help\n"
+        body = str $ "Press Ctrl + O to view Help\n"
 
 drawHelp :: AppState -> [Widget ResourceName]
 drawHelp as = [C.vCenter $ C.hCenter help]
     where
         help = padTop (Pad 1) $ borderWithLabel (str "Help") body
-        body = str $ "Press Ctrl + N to create a new task\n" <>
+        body = str $ "Press Ctrl + B to return to tasks board\n" <>
+                     "Press Ctrl + N to create a new task\n" <>
                      "Use arrow keys to select other tasks\n" <>
                      "Press Ctrl + E to edit a task\n" <>
                      "Press Ctrl + D to delete the selected task\n" <>

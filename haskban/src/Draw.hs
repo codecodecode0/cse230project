@@ -32,6 +32,7 @@ drawBoard as = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
         help = padTop (Pad 1) $ borderWithLabel (str "Help") body
         body = str $ "Press Ctrl + N to create a new task\n" <>
                      "Use arrow keys to select other tasks\n" <>
+                     "Press Ctrl + D to delete the selected task\n" <>
                      "Press Ctrl + R to push the task to next column\n" <>
                      "Press Ctrl + L to push the task to previous column\n" <>
                      "Press Ctrl + Q to quit the app"

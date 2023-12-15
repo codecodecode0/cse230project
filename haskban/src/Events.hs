@@ -76,6 +76,10 @@ handleBoard as ev = do
             put (as & board .~ (curr_board { _todo = movedCols !! 0, _inProgress = movedCols !! 1, _done = movedCols !! 2, _pointer = [0, 0]}))
             -- modify(\s -> TaskBoard (curr_board { todo = movedCols !! 0, inProgress = movedCols !! 1, done = movedCols !! 2, pointer = [0, 0]}))
 
+        VtyEvent (Vty.EvKey (Vty.KChar 'd') [Vty.MCtrl]) -> do
+            let movedCols = deleteTask todos progs dones currentPointerX currentPointerY
+            put (as & board .~ (curr_board { _todo = movedCols !! 0, _inProgress = movedCols !! 1, _done = movedCols !! 2, _pointer = [0, 0]}))
+
         _ -> return ()
 
 moveToRight :: [TaskData] -> [TaskData] -> [TaskData] -> Int -> Int -> [[TaskData]]
@@ -93,6 +97,14 @@ moveToLeft todos progs dones cpx cpy =
     else if cpx == 1
     then [todos ++ [progs !! cpy], removeAtIndex cpy progs, dones]
     else [todos, progs ++ [dones !! cpy], removeAtIndex cpy dones]
+
+deleteTask :: [TaskData] -> [TaskData] -> [TaskData] -> Int -> Int -> [[TaskData]]
+deleteTask todos progs dones cpx cpy = 
+    if cpx == 0
+    then [removeAtIndex cpy todos, progs, dones]
+    else if cpx == 1
+    then [todos, removeAtIndex cpy progs, dones]
+    else [todos, progs, removeAtIndex cpy dones]
 
 removeAtIndex :: Int -> [a] -> [a]
 removeAtIndex index xs

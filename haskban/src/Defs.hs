@@ -88,11 +88,21 @@ makeLenses ''TaskFormData
 data FormEvent = Int
 
 data CurrentState
-  = BoardState | FormState
+  = BoardState | FormState | FilterState
+
+data FilterFormData = FilterFormData {
+  _filterAssignedToIdForm :: T.Text
+}
+makeLenses ''FilterFormData
+
 
 data AppState = MkAppState {
   _board :: Board,
   _form :: TaskForm TaskFormData FormEvent,
-  _state :: CurrentState
+  _state :: CurrentState,
+  _fullBoardCopy :: Board,
+  _filteredBoard :: Board,
+  _filterForm :: TaskForm FilterFormData FormEvent
 }
 makeLenses ''AppState
+

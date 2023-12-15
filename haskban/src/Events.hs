@@ -30,6 +30,7 @@ handleApp = \case
         case (app_state ^. state) of
             BoardState -> handleBoard ev
             FormState  -> handleForm ev
+            FilterState -> handleFilter ev
 
 handleBoard :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
 handleBoard ev = do
@@ -41,11 +42,22 @@ handleBoard ev = do
     let todos = curr_board ^. todo
     let progs = curr_board ^. inProgress
     let dones = curr_board ^. done
-    refreshBoard
+    -- refreshBoard
     case ev of
         VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) ->
             put (app_state & state .~ FormState & form .~ (mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "") (Nothing)))
             -- modify (\s -> (mkForm $ TaskFormData (pack "") (pack "") Low 0 board Todo (pack "")))
+
+        VtyEvent (Vty.EvKey (Vty.KChar 'f') [Vty.MCtrl]) ->
+            put (app_state & state .~ FilterState & filterForm .~ (mkFilterForm $ FilterFormData (pack "")))
+            -- modify (\s -> (mkFilterForm $ FilterFormData (pack "")))
+
+        VtyEvent (Vty.EvKey (Vty.KChar 'y') [Vty.MCtrl]) -> 
+            put (app_state & fullBoardCopy .~ curr_board) >> 
+            put (app_state & board .~ (app_state ^. filteredBoard))
+
+        VtyEvent (Vty.EvKey (Vty.KChar 'z') [Vty.MCtrl]) ->
+            put (app_state & board .~ (app_state ^. fullBoardCopy))
 
         VtyEvent (Vty.EvKey Vty.KUp []) -> do
             let updatedPointer = [currentPointerX, max 0 (currentPointerY - 1)]
@@ -181,3 +193,38 @@ handleForm ev = do
             
 
         _ -> zoom form $ handleFormEvent ev
+
+
+handleFilter :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
+handleFilter ev = do
+    app_state <- get
+    let curr_form = app_state ^. filterForm
+    let currentForm = formState curr_form
+    let currAssignedToName = _filterAssignedToIdForm currentForm
+    case ev of
+        VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
+            put (app_state & state .~ BoardState)
+
+        VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> 
+            put (app_state & filteredBoard .~ (filterBoardResults (app_state ^. board) (unpack currAssignedToName)) & state .~ BoardState)
+
+
+            
+
+        _ -> zoom filterForm $ handleFormEvent ev
+
+
+filterBoardResults :: Board -> String -> Board
+filterBoardResults curr_board filterString =
+    let todos = curr_board ^. todo
+        progs = curr_board ^. inProgress
+        dones = curr_board ^. done
+        filteredTodos = filter (\t -> (unpack $ _assignedToId t) == filterString) todos
+        filteredProgs = filter (\t -> (unpack $ _assignedToId t) == filterString) progs
+        filteredDones = filter (\t -> (unpack $ _assignedToId t) == filterString) dones
+    in MkBoard {
+        _todo = filteredTodos,
+        _inProgress = filteredProgs,
+        _done = filteredDones,
+        _pointer = [0, 0]
+    } 

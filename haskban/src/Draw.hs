@@ -20,6 +20,7 @@ drawApp :: AppState -> [Widget ResourceName]
 drawApp as = case as ^. state of
     BoardState -> drawBoard as
     FormState -> drawForm as
+    FilterState -> drawFilter as
 
 drawBoard :: AppState -> [Widget ResourceName]
 drawBoard as = [C.vCenter $ C.hCenter bd <=> C.hCenter help]
@@ -91,3 +92,14 @@ drawForm as =  [C.vCenter $ C.hCenter rendered_form <=> C.hCenter help]
     
 addBorder :: Text -> Widget ResourceName -> Widget ResourceName
 addBorder t = withBorderStyle BS.unicodeRounded . borderWithLabel (txt t)
+
+drawFilter :: AppState -> [Widget ResourceName]
+drawFilter as = [C.vCenter $ C.hCenter rendered_form <=> C.hCenter help]
+    where 
+        curr_form = as ^. filterForm
+        rendered_form = addBorder "" $ padTop (Pad 1) $ hLimit 50 $ renderForm curr_form
+        help = padTop (Pad 1) $ borderWithLabel (str "Help") body
+        body = str $ "Press Enter or Tab to move to the next field\n" <>
+                     "Press Ctrl + S to save the task\n" <>
+                     "Press Ctrl + B to discard changes and return to tasks board\n" <>
+                     "Press Ctrl + Q to quit the app"

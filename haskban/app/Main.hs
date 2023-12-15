@@ -19,13 +19,23 @@ initBoard = MkBoard
   , _pointer = [0, 0]
   }
 
+emptyBoard :: Board
+emptyBoard = MkBoard
+  { _todo = []
+  , _inProgress = []
+  , _done = []
+  , _pointer = [0, 0]
+}
 
 -- Define the initial state
 initialState :: AppState
 initialState = MkAppState
-  { _board = initBoard
-  , _state = BoardState
-  , _form = mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "") Nothing
+  { _board = initBoard,
+  _state = BoardState,
+  _form = mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "") Nothing,
+  _fullBoardCopy = initBoard,
+  _filterForm = mkFilterForm $ FilterFormData (pack ""),
+  _filteredBoard = emptyBoard
   }
 
 -- Define the app
@@ -34,7 +44,7 @@ app = App
     { appDraw = drawApp
     , appChooseCursor = showFirstCursor
     , appHandleEvent = handleApp
-    , appStartEvent = refreshBoard
+    , appStartEvent = return ()
     , appAttrMap = const theMap
     }
     

@@ -29,6 +29,7 @@ library
       Draw
       Events
       Form
+      ServerData
   other-modules:
       Paths_haskban
   autogen-modules:
@@ -43,6 +44,8 @@ library
     , bytestring
     , containers
     , directory
+    , http-client
+    , http-types
     , lens >=5.0
     , microlens >=0.4
     , microlens-platform
@@ -71,6 +74,8 @@ executable haskban-exe
     , containers
     , directory
     , haskban
+    , http-client
+    , http-types
     , lens >=5.0
     , microlens >=0.4
     , microlens-platform
@@ -100,6 +105,8 @@ test-suite haskban-test
     , containers
     , directory
     , haskban
+    , http-client
+    , http-types
     , lens >=5.0
     , microlens >=0.4
     , microlens-platform

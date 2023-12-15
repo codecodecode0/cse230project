@@ -35,6 +35,8 @@ dependencies:
 - directory
 - vector
 - text-zipper
+- http-client
+- http-types
 
 ghc-options:
 - -Wall

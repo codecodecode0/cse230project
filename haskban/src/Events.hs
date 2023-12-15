@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 module Events where
 
@@ -10,10 +12,12 @@ import Brick.Forms
 import Lens.Micro
 import qualified Graphics.Vty as Vty
 import Control.Monad (void)
-import Data.Text (pack)
+import Data.Text (pack,unpack)
 import Form
-import Brick
-import Brick (modify)
+import Data.IORef
+import ServerData
+import Data.Time
+import GHC.IO (unsafePerformIO)
 
 handleApp :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
 handleApp = \case
@@ -36,7 +40,7 @@ handleBoard as ev = do
     let dones = curr_board ^. done
 
     case ev of
-        VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) -> 
+        VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) ->
             put (as & state .~ FormState & form .~ (mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "")))
             -- modify (\s -> (mkForm $ TaskFormData (pack "") (pack "") Low 0 board Todo (pack "")))
 
@@ -65,6 +69,19 @@ handleBoard as ev = do
             put (as & board . pointer .~ updatedPointer)
             -- modify(\s -> TaskBoard (curr_board { pointer = updatedPointer }))
 
+        -- Press Fn + 5 to update the board from the server
+        VtyEvent (Vty.EvKey (Vty.KFun 5) []) -> do
+            let received_data = unsafePerformIO $ sendGETRequest (-1)
+            let updatedBoard = filterTasks received_data
+            put (as & board .~ updatedBoard)
+            -- let updatedPointerX = max 0 (currentPointerX - 1)
+            -- let updatedPointerY = min (getMaxPossibleLen curr_board updatedPointerX) currentPointerY
+            -- let updatedPointer = [updatedPointerX, updatedPointerY]
+            -- put (as & board . pointer .~ updatedPointer)
+            -- modify(\s -> TaskBoard (curr_board { pointer = updatedPointer }))
+            -- liftIO $ putStrLn "Updating the board from the server"
+            -- liftIO $ putStrLn "Updating
+
         VtyEvent (Vty.EvKey (Vty.KChar 'r') [Vty.MCtrl]) -> do
             let movedCols = moveToRight todos progs dones currentPointerX currentPointerY
             -- put (as & board . pointer .~ updatedPointer)
@@ -78,8 +95,34 @@ handleBoard as ev = do
 
         _ -> return ()
 
+taskBody_Data :: TaskBody -> TaskData
+taskBody_Data taskBody =
+    let curr_body = taskBody ^. receievedBody
+        curr_taskTitle = curr_body^.taskTitle
+        curr_taskDescription = curr_body^.taskDescription
+        curr_taskStatus = curr_body^.taskStatus
+        curr_taskDueDate = curr_body^.taskDueDate
+        curr_taskAssignedToId = curr_body^.taskAssignedToId
+        curr_taskPriority = curr_body^.taskPriority
+    in TaskData (pack curr_taskTitle) (pack $ get_string curr_taskDescription) curr_taskStatus (get_time curr_taskDueDate) (pack $ get_string curr_taskAssignedToId) curr_taskPriority
+
+get_string :: Maybe String -> String
+get_string (Just s) = s
+get_string Nothing = ""
+
+get_time :: Maybe UTCTime -> UTCTime
+get_time (Just t) = t
+get_time Nothing = read "2099-12-31 00:00:00 UTC"
+
+filterTasks :: [TaskBody] -> Board
+filterTasks tasks =
+    let todos = map taskBody_Data $ filter (\t -> (t ^. (receievedBody.taskStatus)) == Todo) tasks
+        progs = map taskBody_Data $ filter (\t -> (t ^. (receievedBody.taskStatus)) == InProgress) tasks
+        dones = map taskBody_Data $ filter (\t -> (t ^. (receievedBody.taskStatus)) == Completed) tasks
+    in MkBoard todos progs dones [0, 0]
+
 moveToRight :: [TaskData] -> [TaskData] -> [TaskData] -> Int -> Int -> [[TaskData]]
-moveToRight todos progs dones cpx cpy = 
+moveToRight todos progs dones cpx cpy =
     if cpx == 0
     then [removeAtIndex cpy todos, progs ++ [todos !! cpy], dones]
     else if cpx == 1
@@ -87,7 +130,7 @@ moveToRight todos progs dones cpx cpy =
     else [todos, progs, dones]
 
 moveToLeft :: [TaskData] -> [TaskData] -> [TaskData] -> Int -> Int -> [[TaskData]]
-moveToLeft todos progs dones cpx cpy = 
+moveToLeft todos progs dones cpx cpy =
     if cpx == 0
     then [todos, progs, dones]
     else if cpx == 1
@@ -101,7 +144,7 @@ removeAtIndex index xs
 
 
 getMaxPossibleLen:: Board -> Int -> Int
-getMaxPossibleLen curr_board x  
+getMaxPossibleLen curr_board x
     | x == 0 = length (curr_board ^. todo) - 1
     | x == 1 = length (curr_board ^. inProgress) - 1
     | x == 2 = length (curr_board ^. done) - 1

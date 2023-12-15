@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module Defs where
 
@@ -9,7 +11,8 @@ import Lens.Micro ((^.))
 import Lens.Micro.TH
 import qualified Graphics.Vty as V
 import Brick.Forms
-
+import Data.Aeson
+import GHC.Generics
 
 data ResourceName 
   = FormTitle
@@ -25,12 +28,12 @@ type TaskForm a e = Form a e ResourceName
 data TaskStatus = Todo
                 | InProgress
                 | Completed
-                deriving (Eq, Show)
+                deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 data TaskPriority = Low
                   | Medium
                   | High
-                  deriving (Eq, Show)
+                  deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 data TaskData = TaskData {
   _title :: T.Text,
@@ -41,6 +44,27 @@ data TaskData = TaskData {
   _priority :: TaskPriority
 }
 makeLenses ''TaskData
+
+data ReceiveBody = Receive {
+    _taskTitle :: String,
+    _taskDescription :: Maybe String,
+    _taskOwnerId :: String,
+    _taskStatus :: TaskStatus,
+    _taskDueDate :: Maybe UTCTime,
+    _taskAssignedToId :: Maybe String, 
+    _taskPriority :: TaskPriority
+} deriving (Show, Eq, Generic, ToJSON, FromJSON)
+
+makeLenses ''ReceiveBody
+
+data TaskBody = Task {
+    _taskId :: Maybe Int,
+    _receievedBody :: ReceiveBody,
+    _taskCreatedAt :: UTCTime,
+    _taskUpdatedAt :: UTCTime
+} deriving (Show, Eq, Generic, ToJSON, FromJSON)
+
+makeLenses ''TaskBody
 
 data Board = MkBoard
   { _todo :: [TaskData]

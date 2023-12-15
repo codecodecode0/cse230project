@@ -113,4 +113,4 @@ main = do
     putStrLn ("Test 2: Passed " ++ show (passedCount (testMoveRight moveRightTestCases)) ++ " out of " ++ show (length moveRightTestCases) ++ " test cases in total.")
     putStrLn ("Test 3: Passed " ++ show (passedCount (testMoveLeft moveLeftTestCases)) ++ " out of " ++ show (length moveLeftTestCases) ++ " test cases in total.")
     putStrLn ("Test 4: Passed " ++ show (passedCount (testDelete deleteTestCases)) ++ " out of " ++ show (length deleteTestCases) ++ " test cases in total.")
--- main = putStrLn ("Hi there")
+    putStrLn ("4 Tests completed.")

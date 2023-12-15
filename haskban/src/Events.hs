@@ -114,12 +114,13 @@ handleForm as ev = do
     let currTitle = _nameForm currentForm
     let currDesc = _descForm currentForm
     let currPriority = _taskPriorityForm currentForm
+    let assigned = _assignedToIdForm currentForm
     case ev of
         VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl]) ->
             put (as & state .~ BoardState)
 
         VtyEvent (Vty.EvKey (Vty.KChar 's') [Vty.MCtrl]) -> do
-            let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") (pack "") currPriority
+            let newTask = TaskData currTitle currDesc Todo (read "2019-01-01 00:00:00 UTC") assigned currPriority
             put (as & board . todo %~ (++ [newTask]) & state .~ BoardState)
 
 

@@ -12,7 +12,7 @@ import qualified Brick.Widgets.Edit as E
 import Brick.Forms
 import Brick.Focus
 import Lens.Micro ((^.))
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import qualified Graphics.Vty as Vty
 
 
@@ -60,8 +60,10 @@ theMap = attrMap Vty.defAttr
 drawTask ::  [Int] -> String -> (Int, TaskData) -> Widget ResourceName
 drawTask pt colTitle (p, task) = 
     if isSelected pt colTitle p
-        then withAttr selectedAttr $ vBox [txtWrap (task ^. title), txtWrap (task ^. description), hBorder]
-        else vBox [txtWrap (task ^. title), txtWrap (task ^. description), hBorder]
+        then withAttr selectedAttr $ row
+        else row
+    where
+        row = vBox [txtWrap (task ^. title), txtWrap (task ^. description), txtWrap (pack "Assigned To: " <> (task ^. assignedToId)), hBorder]
 
 isSelected :: [Int] -> String -> Int -> Bool
 isSelected pt colTitle idx = 

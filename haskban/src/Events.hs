@@ -9,7 +9,7 @@ module Events where
 import Defs
 import Brick
 import Brick.Forms
-import Lens.Micro
+-- import Lens.Micro
 import qualified Graphics.Vty as Vty
 import Control.Monad (void, join)
 import Data.Text (pack,unpack)
@@ -19,6 +19,7 @@ import ServerData
 import Data.Time
 import GHC.IO (unsafePerformIO)
 import Graphics.Vty (Vty(refresh))
+import Control.Lens hiding (zoom)
 
 handleApp :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
 handleApp = \case
@@ -27,11 +28,12 @@ handleApp = \case
     ev -> do
         app_state <- get
         case (app_state ^. state) of
-            BoardState -> handleBoard app_state ev
-            FormState  -> handleForm app_state ev
+            BoardState -> handleBoard ev
+            FormState  -> handleForm ev
 
-handleBoard :: AppState -> BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
-handleBoard app_state ev = do
+handleBoard :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
+handleBoard ev = do
+    app_state <- get
     let curr_board = (app_state^. board)
     let currentPointer = curr_board ^. pointer
     let currentPointerX = (currentPointer !! 0)
@@ -39,7 +41,7 @@ handleBoard app_state ev = do
     let todos = curr_board ^. todo
     let progs = curr_board ^. inProgress
     let dones = curr_board ^. done
-    refreshBoard app_state
+    refreshBoard
     case ev of
         VtyEvent (Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl]) ->
             put (app_state & state .~ FormState & form .~ (mkForm $ TaskFormData (pack "") (pack "") Low Todo (pack "") (Nothing)))
@@ -72,7 +74,7 @@ handleBoard app_state ev = do
 
         -- Press Fn + 5 to update the board from the server
         VtyEvent (Vty.EvKey (Vty.KFun 5) []) -> 
-            refreshBoard app_state
+            refreshBoard
 
         VtyEvent (Vty.EvKey (Vty.KChar 'r') [Vty.MCtrl]) -> do
             let movedCols = moveToRight todos progs dones currentPointerX currentPointerY
@@ -97,10 +99,11 @@ getReceiveBody taskFormData =
         curr_dueDate = taskFormData ^. dueDateForm
     in Receive (unpack curr_title) (Just $ unpack curr_desc) (unpack curr_assignedToId) curr_status curr_dueDate (Just $ unpack curr_assignedToId) curr_priority
 
-refreshBoard :: AppState -> EventM ResourceName AppState ()
-refreshBoard app_state = do
-        let received_data = unsafePerformIO $ sendGETRequest (-1)
-        let updatedBoard = filterTasks received_data
+refreshBoard :: EventM ResourceName AppState ()
+refreshBoard = do
+        app_state <- get
+        let updatedBoard = filterTasks $ unsafePerformIO $ sendGETRequest
+        -- let updatedBoard = filterTasks received_data
         put (app_state & board .~ updatedBoard)
 
 taskBody_Data :: TaskBody -> TaskData
@@ -158,8 +161,9 @@ getMaxPossibleLen curr_board x
     | x == 2 = length (curr_board ^. done) - 1
     | otherwise = 0   -- should never happen
 
-handleForm :: AppState -> BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
-handleForm app_state ev = do
+handleForm :: BrickEvent ResourceName FormEvent -> EventM ResourceName AppState ()
+handleForm ev = do
+    app_state <- get
     let curr_form = app_state ^. form
     let currentForm = formState curr_form
     let currTitle = _nameForm currentForm
@@ -175,7 +179,5 @@ handleForm app_state ev = do
             let _ = sendPOSTRequest send_data
             put (app_state & board . todo %~ (++ [newTask]) & state .~ BoardState)
             
-
-
 
         _ -> zoom form $ handleFormEvent ev

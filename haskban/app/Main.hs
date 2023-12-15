@@ -34,7 +34,7 @@ app = App
     { appDraw = drawApp
     , appChooseCursor = showFirstCursor
     , appHandleEvent = handleApp
-    , appStartEvent = refreshBoard initialState 
+    , appStartEvent = refreshBoard
     , appAttrMap = const theMap
     }
     

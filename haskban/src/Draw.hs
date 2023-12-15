@@ -52,9 +52,9 @@ selectedAttr = attrName "selected"
 
 theMap :: AttrMap
 theMap = attrMap Vty.defAttr
-  [ (selectedAttr, Vty.black `on` Vty.white),
-    (E.editFocusedAttr, Vty.black `on` Vty.white),
-    (formAttr, Vty.defAttr),
+  [ (formAttr, Vty.defAttr),
+    (selectedAttr, Vty.black `on` Vty.white),
+    (E.editFocusedAttr, Vty.white `on` Vty.black),
     (focusedFormInputAttr, Vty.blue `on` Vty.white)
   ]
 

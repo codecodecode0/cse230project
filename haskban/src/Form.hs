@@ -16,8 +16,6 @@ import Brick.Focus
   ( focusGetCurrent
   , focusRingCursor
   )
-import qualified Brick.Widgets.Border as B
-import qualified Brick.Widgets.Center as C
 
 mkForm :: TaskFormData -> Form TaskFormData e ResourceName
 mkForm =
@@ -28,17 +26,17 @@ mkForm =
                                                       , (InProgress,FormStatus, "InProgress")
                                                       , (Completed,FormStatus, "Completed")
                                                       ]
-               , label "Due Date" @@= editShowableFieldWithValidate dueDateForm FormDueDate validDate
+              --  , label "Due Date" @@= editShowableFieldWithValidate dueDateForm FormDueDate validDate
                , label "Assigned To" @@= editTextField assignedToIdForm FormAssignedToId (Just 1)
                , label "Priority:" @@= radioField taskPriorityForm [ (Low,FormPriority, "Low")
                                                           , (Medium,FormPriority, "Medium")
                                                           , (High,FormPriority, "High")
                                                           ]
                ]
-      where
-        validDate date = case date of
-          Nothing -> False
-          Just d -> d > read "2019-01-01 00:00:00 UTC"
+      -- where
+      --   validDate date = case date of
+      --     Nothing -> False
+      --     Just d -> d > read "2019-01-01 00:00:00 UTC"
 
 
 -- mkForm :: TaskFormData -> Form TaskFormData e ResourceName
